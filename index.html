@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Anna's Homepage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <main>
+        <div class="content-container">
+            <h1 class = "bettergreen" margin-bottom: 0; margin-top: 20px;">Anna Hofer</h1>
+        </div>
+        <div style ="margin-top: 0;" class="content-container">
+            <div>
+                <p>I am a Ph.D. student at <a href="https://ovgu.de">Otto von Guericke University Magdeburg</a> in <a href="https://www.thomas-kahle.de">Thomas Kahle</a>'s research group funded by the DFG priority program <a href="https://www.combinatorial-synergies.de">Combinatorial Synergies</a>.
+                    I obtained both my Bachelor's and Master's degrees at OvGU under the supervision of Thomas Kahle.</p>
+                <p>My research focuses on combinatorial and computational commutative algebra. In particular, I am interested in combinatorial structures that provide insight into algebraic objects, as well as in the development of algorithms and software for computations in commutative algebra.</p>
+                <p>Other than maths, I love sport - especially running, cycling, swimming, and climbing.
+                    <!-- You can follow my training on <a href="https://www.strava.com/athletes/44282621">Strava</a>. -->
+                    I also like learning languages and reading.</p>
+                <!-- <p>Click <a href="">here</a> for a short cv.</p> -->
+            </div>
+            <img class="responsive-image" src="images/IMG_5565_small.jpeg" alt="an image of myself" maxwidth = 100% width="280" height="280">
+        </div>
+
+        <div class="content-container">
+            <div>
+                <h3 class="niceorange">News</h3>
+                <ul>
+                    <li>I am organizing the <a href="https://mathconf.eu/yrccs-2026/index.html">Young Researchers Conference on Combinatorial Synergies</a> together with Matt Dupraz and Léo Mathis.</li>
+                    <li>Computation of injective resolutions and local cohomology over normal affine semigroup rings is finally available in <a href="https://www.oscar-system.org">OSCAR</a>.
+                        Check it out <a href="https://docs.oscar-system.org/stable/Experimental/InjectiveResolutions/introduction/">here</a>. This is joint work with Thomas Kahle.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="content-container">
+            <div>
+                <h3 class = "bettergreen">Upcoming activities</h3>
+                <ul>
+                    <li>4-8 May 2026: <em>Young Researchers Conference on Combinatorial Synergies</em>, Hannover</li>
+                </ul>
+            </div>
+        </div>
+        <div class="content-container">
+        <div>
+            <h3 class = "bettergreen">Past activities</h3>
+            <ul>
+                <li>20-28 March 2026: <em>Combinatorial Coworkspace</em>, Kleinwalsertal</li>
+                <li>26-30 January 2026: <em>Algebraic Topology: Methods, Computation, and Science</em>, Leipzig</li>
+                <li>3-5 September 2025: <em>Conference of the Priority Program Combinatorial Synergies</em>, Hannover</li>
+                <li>23 June - 4 July 2025: <em>SLMath Summer School: New perspectives on discriminants and their applications</em>, MPI Leipzig</li>
+                <li>26-30 May 2025: <em>Workshop on the Applications of Commutative Algebra</em>, The Fields Institute, Toronto</li>
+                <li>24-28 March 2025: <em>Algebraic Statistics 2025</em>, Munich</li>
+                <li>19-21 March 2025: I gave a talk at <em>Combinatorial Synergies East</em>, MPI Leipzig</li>
+                <li>11-13 September 2024: <em>Kick-Off Combinatorial synergies</em>, Osnabrück</li>
+                <li>13-14 December 2022: <em>Macaulay2 Bootcamp</em>, MPI Leipzig</li>
+                <li>13-15 June 2022: <em>75+80=155 years of commutative algebra</em> - Summerschool, Osnabrück</li>
+            </ul>
+        </div>
+        </div>
+        <div class="content-container" style="display: flex; justify-content: right;">
+            <div >
+                <a href="https://www.combinatorial-synergies.de">
+                    <img id="SPPlogo" class="responsive-image" src="images/BWM-farbig-typo-schwarz.png" alt="Combinatorial Synergies logo" style="display: block; margin: 0 auto; max-width: 250px; height: auto;"/>
+                </a>
+            </div>
+        </div>
+        <button class="toggle-btn" id="toggleButton">Dark</button>
+<script>
+        const toggleButton = document.getElementById('toggleButton');
+        const body = document.body;
+        const SPPlogo = document.getElementById('SPPlogo');
+
+        // 1. Check system preference and localStorage
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const userTheme = localStorage.getItem('theme');
+        const isDarkMode = userTheme === 'dark' || (userTheme === null && prefersDark);
+
+        // 2. Apply initial mode
+        if (isDarkMode) {
+            body.classList.add('dark-mode');
+            toggleButton.textContent = 'Light';
+            SPPlogo.src = "images/BWM-farbig-typo-weiss.png";
+        } else {
+            body.classList.remove('dark-mode');
+            toggleButton.textContent = 'Dark';
+            SPPlogo.src = "images/BWM-farbig-typo-schwarz.png";
+        }
+
+        // 3. Toggle handler
+        toggleButton.addEventListener('click', function () {
+            body.classList.toggle('dark-mode');
+
+            const nowDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', nowDark ? 'dark' : 'light');
+
+            toggleButton.textContent = nowDark ? 'Light' : 'Dark';
+            SPPlogo.src = nowDark 
+            ? "images/BWM-farbig-typo-weiss.png"
+            : "images/BWM-farbig-typo-schwarz.png";
+        });
+        </script>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p style="font-size: larger; margin-bottom: 10px; margin-top: 15px;"> anna.hofer at ovgu.de</p>            <div class="social-icons">
+            <a href="https://www.linkedin.com/in/anna-hofer-32a179178">
+                <img src="images/icons8-linkedin-50.png">
+            </a>
+            <a href="https://github.com/annahofer00">
+                <img src="images/icons8-github-50.png">
+            </a>
+            </div>
+        </div>
+        <p style="margin-bottom: 0; font-size: x-small;">© 2025 Anna Hofer</p>
+    </footer>
+</body>
+</html>
