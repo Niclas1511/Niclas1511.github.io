@@ -1,0 +1,11 @@
+body {
+    max-width: 700px;
+    margin: 40px auto;
+    font-family: Georgia, serif;
+    line-height: 1.6;
+    color: #222;
+}
+
+a {
+    color: #ff6a00;
+}
