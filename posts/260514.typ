@@ -1,3 +1,5 @@
 = Martha Argerich
 
 Im KAMPA Verlag ist mit #link("https://kampaverlag.ch/produkt/fingeruebungen/")[_Fingerübungen_] eine für Freunde der Klaviermusik sehr lesenswerte Sammlung von Interviews mit der Pianistin Martha Argerich erschienen. Eine gute Gelegenheit, die bei Deutsche Grammophon erschienene Platte _Début Recital_ erneut zu hören. Die Aufnahme der h-Moll-Sonate von Liszt hat mich schon als Jugendlicher begeistert und tut es auch immer noch. Die Prokofjew-Toccata und die Ungarische Rhapsodie Nr. 6 von Liszt sind technisch sehr beeindruckend. Meine persönliche Lieblingsaufnahme auf dem Album ist Ravels _Jeux d’eau_, M. 30, deren Klang mich begeistert. 
+
+Eine Besprechung der CD findet man #link("http://www.classical.net/music/recs/reviews/d/dgg47430a.php")[hier].
