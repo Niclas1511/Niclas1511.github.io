@@ -1,5 +1,5 @@
 ---
-title: Notes & Documents
+title: Notes & Theses
 subtitle: Niclas Niederdrenk
 lang: en
 ---

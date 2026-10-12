@@ -82,7 +82,6 @@ figcaption { font-size: 12px; line-height: 1.6; color: var(--muted); margin-top:
 .content-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; }
 .content-panel { background: var(--panel); padding: 28px 30px; min-width: 0; }
 h2 { font-size: 21px; font-weight: 600; margin: 0 0 18px; line-height: 1.35; letter-spacing: -.025em; }
-.section-number { font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--muted); white-space: nowrap; }
 .content-panel p { margin: 0 0 16px; font-size: inherit; max-width: 65ch; }
 .content-panel p:last-child { margin-bottom: 0; }
 .page-cv .hero, .page-legal .hero, .page-notes .hero { grid-template-columns: 1fr; }
@@ -106,15 +105,16 @@ ul { list-style: none; margin: 0; padding: 0; }
 li { border-top: 1px solid var(--line); padding: 16px 0; font-size: inherit; }
 li:last-child { padding-bottom: 0; }
 .panel-activities li, .panel-conferences-and-summer-schools li { display: grid; grid-template-columns: 205px minmax(0, 1fr); gap: 26px; }
-.entry-date { font-size: 16px; color: var(--blue); padding-top: 2px; }
+.entry-date { font-size: 16px; color: var(--muted); padding-top: 2px; }
+.entry-location, .course-instructor { display: block; color: var(--muted); font-size: inherit; margin-top: 4px; }
+.page-teaching li strong { font-weight: 600; }
 .entry-detail { min-width: 0; max-width: 65ch; }
 .entry-detail a { color: var(--blue); }
 .entry-detail a:hover { color: var(--blue); text-decoration: underline; }
-.panel-contact { display: flex; align-items: center; justify-content: space-between; gap: 24px; background: var(--contact-panel); color: white; padding-top: 26px; padding-bottom: 26px; }
-.panel-contact h2 { margin: 0; flex-shrink: 0; }
-.panel-contact .section-number { color: #b8c5d8; }
+.panel-contact { display: block; background: var(--contact-panel); color: white; padding-top: 26px; padding-bottom: 26px; }
+.panel-contact h2 { margin: 0 0 18px; }
 .panel-contact a { color: #c2ccff; }
-.panel-contact p { margin: 0; font-size: clamp(16px, 2vw, 20px); font-weight: 500; overflow-wrap: anywhere; }
+.panel-contact p { margin: 0 0 16px; font-size: inherit; font-weight: 400; overflow-wrap: anywhere; }
 footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; border-top: 1px solid var(--ink); margin-top: 28px; padding: 22px 0 34px; font-size: 12px; color: var(--muted); }
 footer p { margin: 0; }
 footer a { color: var(--muted); text-decoration: none; }

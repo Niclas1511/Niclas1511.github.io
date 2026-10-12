@@ -17,7 +17,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent
 PAGES_DIR = ROOT / "pages"
-NAV = [("index.html", "Home"), ("teaching.html", "Teaching"), ("cv.html", "CV"), ("notes.html", "Notes & Documents")]
+NAV = [("index.html", "Home"), ("notes.html", "Notes & Theses"), ("teaching.html", "Teaching"), ("cv.html", "CV")]
 
 
 def read_page(path: Path) -> tuple[dict[str, str], str]:
@@ -75,8 +75,10 @@ def render_sections(body: str, stem: str) -> str:
     for heading, content in sections:
         key = re.sub(r"[^a-z0-9]+", "-", re.sub(r"<[^>]+>", "", heading).lower()).strip("-")
         if key in {"activities", "conferences-and-summer-schools"}:
-            content = re.sub(r"<li>(.*?) \(([^()]*(?:19|20)\d{2})\)</li>",
-                             r'<li><span class="entry-date">\2</span><span class="entry-detail">\1</span></li>', content, flags=re.S)
+            content = re.sub(r"<li>(<a .*?</a>), (.*?) \(([^()]*(?:19|20)\d{2})\)</li>",
+                             r'<li><span class="entry-date">\3</span><span class="entry-detail">\1<span class="entry-location">\2</span></span></li>', content, flags=re.S)
+        if stem == "teaching":
+            content = re.sub(r'<em>(Prof\. .*?)</em>', r'<span class="course-instructor">\1</span>', content)
         if stem == "cv":
             def cv_entry(match: re.Match) -> str:
                 period, separator, heading = match[1].partition(": ")
@@ -88,9 +90,14 @@ def render_sections(body: str, stem: str) -> str:
         if key == "overview" and stem in {"cv", "teaching"}:
             rendered.append(f'<div class="page-introduction">{content}</div>')
             continue
-        section_number = sum('<section ' in item for item in rendered) + 1
+        aliases = {
+            "education": ["educational-background", "international-experience"],
+            "experience": ["voluntary-service", "work-experience"],
+            "skills": ["additional-qualifications"],
+        }.get(key, []) if stem == "cv" else []
+        alias_html = "".join(f'<span id="{alias}" class="section-anchor" aria-hidden="true"></span>' for alias in aliases)
         rendered.append(f'<section class="content-panel panel-{key}" aria-labelledby="{key}">'
-                        f'<h2 id="{key}"><span class="section-number">{section_number:02d} — </span>{heading}</h2>{content}</section>')
+                        f'{alias_html}<h2 id="{key}">{heading}</h2>{content}</section>')
     return "\n".join(rendered)
 
 
@@ -110,7 +117,6 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         "teaching": "Teaching activities and courses at Otto von Guericke University Magdeburg.",
         "cv": "Education, experience, and qualifications.",
         "legal": "Website operator and contact information.",
-        "notes": "Mathematical writing and documents.",
     }.get(stem, "")
     hero_figure = '''<figure class="monomial-art">
             <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
@@ -119,6 +125,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
             <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>
         </figure>''' if stem == "teaching" else ""
     hero_contact = '<a class="hero-contact" href="mailto:niclas.niederdrenk@ovgu.de">niclas.niederdrenk@ovgu.de</a>' if stem == "index" else ""
+    hero_description = f'<p class="hero-description">{intro}</p>' if intro else ""
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -139,7 +146,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         <div class="hero-copy">
             <p class="eyebrow">{subtitle}</p>
             <h1>{title_html}</h1>
-            <p class="hero-description">{intro}</p>{hero_contact}
+{hero_description}{hero_contact}
         </div>
         {hero_figure}
     </header>

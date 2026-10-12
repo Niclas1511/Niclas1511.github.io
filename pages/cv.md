@@ -24,6 +24,7 @@ Otto von Guericke University Magdeburg
 - Supervisor: [Thomas Kahle](https://thomas-kahle.de/)
 - Master's thesis grade: 1.0
 - Overall grade: 1.2
+- Erasmus study abroad: KU Leuven, Belgium (September 2022 – February 2023)
 
 ### 2018–2021: Bachelor's in Mathematics
 
@@ -37,14 +38,6 @@ Otto von Guericke University Magdeburg
 
 Otto von Guericke University Magdeburg
 
-## Voluntary Service
-
-### 2016–2017: [Schutzstation Wattenmeer](https://www.schutzstation-wattenmeer.de/)
-
-Hallig Hooge
-
-## Educational Background
-
 ### 2016: Abitur
 
 Leibniz Oberschule, Berlin
@@ -52,13 +45,11 @@ Leibniz Oberschule, Berlin
 - DMV Mathematics Abitur Prize
 - Abitur grade: 1.4
 
-## International Experience
+## Experience
 
-### September 2022 – February 2023: Erasmus Study Abroad
+### Current position: Research Associate (Wissenschaftlicher Mitarbeiter)
 
-KU Leuven, Belgium
-
-## Work Experience
+Mathematics, Otto von Guericke University Magdeburg
 
 ### April 2024 – October 2024: Internship
 
@@ -74,7 +65,11 @@ Institute of Algebra and Geometry
 
 Mathematics for Computer Scientists 1–3
 
-## Additional Qualifications
+### 2016–2017: Voluntary service — [Schutzstation Wattenmeer](https://www.schutzstation-wattenmeer.de/)
+
+Hallig Hooge
+
+## Skills
 
 - **Languages:** English (C1), French (B1)
 - **Programming and tools:** Python, Macaulay2, Java, Pascal, Julia, C#, C, Haskell, Scala, MySQL, LaTeX, Typst, Lean
