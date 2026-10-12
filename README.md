@@ -8,6 +8,11 @@ All page content lives in Markdown files:
 
 - `pages/index.md`: profile, travels/conferences (Activities), and contact details.
 - `pages/teaching.md`: teaching activities.
+- `pages/cv.md`: curriculum vitae. Use `##` for sections and
+  `### Period: Position or degree` for individual entries, followed by the
+  institution and optional bullet points. Entries appear in the order written;
+  keep the most recent first within each section. Update the “Last updated” date
+  when changing the CV.
 
 Use standard Markdown for headings, lists, links, emphasis, and tables. Optional
 frontmatter at the start of each file sets the page title, subtitle, and language:

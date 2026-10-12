@@ -80,6 +80,18 @@ h2 { font-size: 11px; font-weight: 500; margin: 0 0 22px; letter-spacing: .025em
 .section-number { opacity: .7; }
 .content-panel p { margin: 0 0 16px; font-size: 14px; }
 .content-panel p:last-child { margin-bottom: 0; }
+.page-cv .hero { grid-template-columns: 1fr; }
+.page-cv .content-panel { grid-column: 1 / -1; }
+.page-cv .panel-overview { background: transparent; padding: 0; }
+.page-cv .panel-overview h2 { display: none; }
+.page-cv .panel-overview p { color: var(--muted); font-size: 12px; }
+.cv-entry { display: grid; grid-template-columns: 205px minmax(0, 1fr); gap: 26px; border-top: 1px solid var(--line); padding: 22px 0; }
+.cv-entry:last-child { padding-bottom: 0; }
+.cv-entry h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.cv-entry .entry-date { font-size: 11px; margin: 0; }
+.cv-entry-detail { min-width: 0; }
+.cv-entry-detail p { color: var(--muted); margin-bottom: 10px; }
+.cv-entry li { border: 0; padding: 2px 0; }
 .panel-besides-mathematics { background: var(--accent-panel); color: white; }
 .panel-besides-mathematics a { color: white; }
 .panel-activities, .panel-contact, .page-teaching .content-panel { grid-column: 1 / -1; }
@@ -106,6 +118,7 @@ footer a { color: var(--muted); text-decoration: none; }
     .content-grid { grid-template-columns: 1fr; }
     .content-panel { padding: 24px; }
     .panel-activities li, .page-teaching li { grid-template-columns: 155px 1fr; gap: 18px; }
+    .cv-entry { grid-template-columns: 155px minmax(0, 1fr); gap: 18px; }
     .panel-contact { align-items: flex-start; flex-direction: column; gap: 16px; }
 }
 @media (max-width: 520px) {
@@ -120,6 +133,7 @@ footer a { color: var(--muted); text-decoration: none; }
     h1 { font-size: clamp(40px, 11vw, 56px); }
     .monomial-lattice { width: 220px; justify-self: end; }
     .panel-activities li, .page-teaching li { grid-template-columns: 1fr; gap: 7px; }
+    .cv-entry { grid-template-columns: 1fr; gap: 7px; }
     footer { font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

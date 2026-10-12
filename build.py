@@ -17,7 +17,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent
 PAGES_DIR = ROOT / "pages"
-NAV = [("index.html", "Home"), ("teaching.html", "Teaching")]
+NAV = [("index.html", "Home"), ("teaching.html", "Teaching"), ("cv.html", "CV")]
 
 
 def read_page(path: Path) -> tuple[dict[str, str], str]:
@@ -80,6 +80,14 @@ def render_sections(body: str, stem: str) -> str:
         if stem == "teaching":
             content = re.sub(r"<li>([^<:]+): (.*?)</li>",
                              r'<li><span class="entry-date">\1</span><span class="entry-detail">\2</span></li>', content, flags=re.S)
+        if stem == "cv":
+            def cv_entry(match: re.Match) -> str:
+                period, separator, heading = match[1].partition(": ")
+                if not separator:
+                    return match[0]
+                return (f'<article class="cv-entry"><p class="entry-date">{period}</p>'
+                        f'<div class="cv-entry-detail"><h3>{heading}</h3>{match[2]}</div></article>')
+            content = re.sub(r"<h3>(.*?)</h3>(.*?)(?=<h3>|$)", cv_entry, content, flags=re.S)
         rendered.append(f'<section class="content-panel panel-{key}" aria-labelledby="{key}">'
                         f'<h2 id="{key}"><span class="section-number">{number:02d} — </span>{heading}</h2>{content}</section>')
     return "\n".join(rendered)
@@ -96,13 +104,17 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         f'<a href="{href}"' + (' class="current" aria-current="page"' if href == f"{stem}.html" else "")
         + f'>{escape(label)}</a>' for href, label in NAV
     )
-    intro = "Commutative algebra, computational algebra, and combinatorics." if stem == "index" else "Teaching activities and courses at Otto von Guericke University Magdeburg."
+    intro = {
+        "index": "Commutative algebra, computational algebra, and combinatorics.",
+        "teaching": "Teaching activities and courses at Otto von Guericke University Magdeburg.",
+        "cv": "Education, experience, and qualifications.",
+    }.get(stem, "")
     hero_figure = '''<figure class="monomial-art">
             <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
         </figure>''' if stem == "index" else f'''<figure class="monomial-lattice">
             {monomial_lattice()}
             <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>
-        </figure>'''
+        </figure>''' if stem == "teaching" else ""
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
