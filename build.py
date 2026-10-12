@@ -109,6 +109,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         "index": "Commutative algebra, computational algebra, and combinatorics.",
         "teaching": "Teaching activities and courses at Otto von Guericke University Magdeburg.",
         "cv": "Education, experience, and qualifications.",
+        "legal": "Website operator and contact information.",
     }.get(stem, "")
     hero_figure = '''<figure class="monomial-art">
             <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
@@ -146,6 +147,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     </main>
     <footer>
         <p>© {date.today().year} Niclas Niederdrenk</p>
+        <a href="legal.html"{' aria-current="page"' if stem == 'legal' else ''}>Legal notice</a>
         <button class="theme-toggle" type="button" role="switch" aria-label="Dark mode" aria-checked="false" hidden>
             <span>Dark mode</span><span class="theme-track" aria-hidden="true"></span>
         </button>
