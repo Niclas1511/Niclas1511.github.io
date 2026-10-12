@@ -5,6 +5,8 @@
     --blue: #293fc4;
     --muted: #606b7b;
     --panel: #f3f4f9;
+    --home-panel: #f1f3f9;
+    --hobby-panel: #f7f4ee;
     --line: #d9dce5;
     --contact-panel: #101e30;
     --selected-text: #fff;
@@ -16,6 +18,8 @@
     --blue: #a3b1ff;
     --muted: #aab5c5;
     --panel: #1b2432;
+    --home-panel: var(--panel);
+    --hobby-panel: var(--panel);
     --line: #384559;
     --contact-panel: #202d42;
     --selected-text: #10151e;
@@ -81,8 +85,9 @@ h2 { font-size: 21px; font-weight: 600; margin: 0 0 18px; line-height: 1.35; let
 .section-number { font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--muted); white-space: nowrap; }
 .content-panel p { margin: 0 0 16px; font-size: inherit; max-width: 65ch; }
 .content-panel p:last-child { margin-bottom: 0; }
-.page-cv .hero, .page-legal .hero { grid-template-columns: 1fr; }
-.page-cv .content-panel, .page-legal .content-panel { grid-column: 1 / -1; }
+.page-cv .hero, .page-legal .hero, .page-notes .hero { grid-template-columns: 1fr; }
+.page-cv .content-panel, .page-legal .content-panel, .page-notes .content-panel { grid-column: 1 / -1; }
+.page-notes h3 { margin: 0 0 10px; font-size: 24px; line-height: 1.35; }
 .page-introduction { grid-column: 1 / -1; max-width: 65ch; }
 .page-introduction p { margin: 0; }
 .page-cv .page-introduction { color: var(--muted); font-size: 16px; }
@@ -94,6 +99,8 @@ h2 { font-size: 21px; font-weight: 600; margin: 0 0 18px; line-height: 1.35; let
 .cv-entry-detail p { color: var(--muted); margin-bottom: 10px; }
 .cv-entry li { border: 0; padding: 2px 0; }
 .panel-besides-mathematics { align-self: start; }
+.page-index .panel-about-me, .page-index .panel-conferences-and-summer-schools { background: var(--home-panel); }
+.page-index .panel-besides-mathematics { background: var(--hobby-panel); }
 .panel-activities, .panel-conferences-and-summer-schools, .panel-contact, .page-teaching .content-panel { grid-column: 1 / -1; }
 ul { list-style: none; margin: 0; padding: 0; }
 li { border-top: 1px solid var(--line); padding: 16px 0; font-size: inherit; }

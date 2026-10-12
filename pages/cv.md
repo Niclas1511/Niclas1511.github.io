@@ -20,7 +20,8 @@ Otto von Guericke University Magdeburg
 Otto von Guericke University Magdeburg
 
 - Academic focus: Commutative Algebra
-- Master's thesis: *Gemischte Binomkantenideale*
+- Master's thesis: [*Gemischte Binomkantenideale*](documents/2025-Niederdrenk-Gemischte-Binomkantenideale.pdf)
+- Supervisor: [Thomas Kahle](https://thomas-kahle.de/)
 - Master's thesis grade: 1.0
 - Overall grade: 1.2
 

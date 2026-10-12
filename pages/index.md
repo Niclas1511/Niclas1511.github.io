@@ -8,9 +8,9 @@ lang: en
 
 I am a PhD student at [Otto von Guericke University Magdeburg](https://www.ovgu.de/), supervised by [Thomas Kahle](https://thomas-kahle.de/).
 
-My research interests lie in commutative algebra, computational algebra, and combinatorics, with a particular emphasis on monomial and binomial ideals, free resolutions, and homological invariants. My current research focuses on signed binomial edge ideals associated with signed graphs, exploring how their algebraic properties reflect the underlying combinatorial structures.
+My research focuses on monomial and binomial ideals, particularly signed binomial edge ideals. I study how the combinatorics of signed graphs is reflected in the free resolutions and homological invariants of the associated ideals.
 
-I use [Macaulay2](https://macaulay2.com/) to explore examples and develop conjectures. I am also interested in the formalization of mathematics using the proof assistant [Lean](https://lean-lang.org/).
+I use [Macaulay2](https://macaulay2.com/) for computations and am also interested in formalizing mathematics with [Lean](https://lean-lang.org/).
 
 ## Besides mathematics
 

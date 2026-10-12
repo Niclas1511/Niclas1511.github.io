@@ -9,6 +9,7 @@ All page content lives in Markdown files:
 - `pages/index.md`: profile, travels/conferences (Activities), and contact details.
 - `pages/teaching.md`: teaching activities.
 - `pages/legal.md`: legal notice and operator contact details, linked in the footer of every page.
+- `pages/notes.md`: notes and documents, with descriptions and links to PDFs in `documents/`.
 - `pages/cv.md`: curriculum vitae. Use `##` for sections and
   `### Period: Position or degree` for individual entries, followed by the
   institution and optional bullet points. Entries appear in the order written;

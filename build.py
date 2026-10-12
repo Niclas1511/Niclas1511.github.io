@@ -17,7 +17,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent
 PAGES_DIR = ROOT / "pages"
-NAV = [("index.html", "Home"), ("teaching.html", "Teaching"), ("cv.html", "CV")]
+NAV = [("index.html", "Home"), ("teaching.html", "Teaching"), ("cv.html", "CV"), ("notes.html", "Notes & Documents")]
 
 
 def read_page(path: Path) -> tuple[dict[str, str], str]:
@@ -110,6 +110,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         "teaching": "Teaching activities and courses at Otto von Guericke University Magdeburg.",
         "cv": "Education, experience, and qualifications.",
         "legal": "Website operator and contact information.",
+        "notes": "Mathematical writing and documents.",
     }.get(stem, "")
     hero_figure = '''<figure class="monomial-art">
             <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
