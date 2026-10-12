@@ -77,7 +77,3 @@ Mathematics for Computer Scientists 1–3
 
 - **Languages:** English (C1), French (B1)
 - **Programming and tools:** Python, Macaulay2, Java, Pascal, Julia, C#, C, Haskell, Scala, MySQL, LaTeX, Typst, Lean
-
-## Interests
-
-Music (piano, saxophone), literature, hiking, cycling, skiing.
