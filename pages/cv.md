@@ -20,6 +20,7 @@ Otto von Guericke University Magdeburg
 Otto von Guericke University Magdeburg
 
 - Academic focus: Commutative Algebra
+- Master's thesis: *Gemischte Binomkantenideale*
 - Master's thesis grade: 1.0
 - Overall grade: 1.2
 
@@ -27,6 +28,7 @@ Otto von Guericke University Magdeburg
 
 Otto von Guericke University Magdeburg
 
+- Bachelor's thesis: *Kurze Polynome in Idealen*
 - Bachelor's thesis grade: 1.0
 - Overall grade: 1.2
 
@@ -42,34 +44,18 @@ Hallig Hooge
 
 ## Educational Background
 
-### 2012–2016: Leibniz Oberschule
+### 2016: Abitur
 
-Berlin
+Leibniz Oberschule, Berlin
 
 - DMV Mathematics Abitur Prize
 - Abitur grade: 1.4
-
-### 2008–2012: Gymnasium Alleestraße
-
-Siegburg
-
-### 2004–2008: Grundschule Hanftal
-
-Hennef
 
 ## International Experience
 
 ### September 2022 – February 2023: Erasmus Study Abroad
 
 KU Leuven, Belgium
-
-### March 2013: Student Exchange
-
-Rennes
-
-### January 2012: Student Exchange
-
-Metz
 
 ## Work Experience
 

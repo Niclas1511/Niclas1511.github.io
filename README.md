@@ -14,6 +14,9 @@ All page content lives in Markdown files:
   keep the most recent first within each section. Update the “Last updated” date
   when changing the CV.
 
+`sources/cv-full.md` preserves the complete CV before the website was shortened.
+It is a reference document and is not converted into a website page.
+
 Use standard Markdown for headings, lists, links, emphasis, and tables. Optional
 frontmatter at the start of each file sets the page title, subtitle, and language:
 

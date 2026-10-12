@@ -69,17 +69,14 @@ def render_sections(body: str, stem: str) -> str:
     chunks = re.split(r"<h2>(.*?)</h2>", body, flags=re.S)
     sections = []
     if chunks[0].strip():
-        sections.append(("Courses" if stem == "teaching" else "Overview", chunks[0]))
+        sections.append(("Overview", chunks[0]))
     sections.extend(zip(chunks[1::2], chunks[2::2]))
     rendered = []
-    for number, (heading, content) in enumerate(sections, 1):
+    for heading, content in sections:
         key = re.sub(r"[^a-z0-9]+", "-", re.sub(r"<[^>]+>", "", heading).lower()).strip("-")
-        if key == "activities":
+        if key in {"activities", "conferences-and-summer-schools"}:
             content = re.sub(r"<li>(.*?) \(([^()]*(?:19|20)\d{2})\)</li>",
                              r'<li><span class="entry-date">\2</span><span class="entry-detail">\1</span></li>', content, flags=re.S)
-        if stem == "teaching":
-            content = re.sub(r"<li>([^<:]+): (.*?)</li>",
-                             r'<li><span class="entry-date">\1</span><span class="entry-detail">\2</span></li>', content, flags=re.S)
         if stem == "cv":
             def cv_entry(match: re.Match) -> str:
                 period, separator, heading = match[1].partition(": ")
@@ -88,8 +85,12 @@ def render_sections(body: str, stem: str) -> str:
                 return (f'<article class="cv-entry"><p class="entry-date">{period}</p>'
                         f'<div class="cv-entry-detail"><h3>{heading}</h3>{match[2]}</div></article>')
             content = re.sub(r"<h3>(.*?)</h3>(.*?)(?=<h3>|$)", cv_entry, content, flags=re.S)
+        if key == "overview" and stem in {"cv", "teaching"}:
+            rendered.append(f'<div class="page-introduction">{content}</div>')
+            continue
+        section_number = sum('<section ' in item for item in rendered) + 1
         rendered.append(f'<section class="content-panel panel-{key}" aria-labelledby="{key}">'
-                        f'<h2 id="{key}"><span class="section-number">{number:02d} — </span>{heading}</h2>{content}</section>')
+                        f'<h2 id="{key}"><span class="section-number">{section_number:02d} — </span>{heading}</h2>{content}</section>')
     return "\n".join(rendered)
 
 
@@ -115,6 +116,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
             {monomial_lattice()}
             <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>
         </figure>''' if stem == "teaching" else ""
+    hero_contact = '<a class="hero-contact" href="mailto:niclas.niederdrenk@ovgu.de">niclas.niederdrenk@ovgu.de</a>' if stem == "index" else ""
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -135,7 +137,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         <div class="hero-copy">
             <p class="eyebrow">{subtitle}</p>
             <h1>{title_html}</h1>
-            <p class="hero-description">{intro}</p>
+            <p class="hero-description">{intro}</p>{hero_contact}
         </div>
         {hero_figure}
     </header>
