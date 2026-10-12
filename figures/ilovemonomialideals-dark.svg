@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024">
+  <defs>
+    <filter id="heart-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+    <path id="heart" d="M790 380 C742 358 664 300 664 233 C664 170 735 140 790 210 C846 140 918 170 918 233 C918 300 838 358 790 380Z"/>
+  </defs>
+  <g fill="#e5eaf3" font-family="Georgia, 'Times New Roman', serif" font-weight="700" text-anchor="middle">
+    <text x="566" y="378" font-size="280" textLength="102" lengthAdjust="spacingAndGlyphs">I</text>
+    <text x="768" y="565" font-size="162" textLength="642" lengthAdjust="spacingAndGlyphs">Monomial</text>
+    <text x="768" y="734" font-size="162" textLength="385" lengthAdjust="spacingAndGlyphs">Ideals</text>
+  </g>
+  <use href="#heart" fill="#ff0000" opacity=".35" filter="url(#heart-glow)"/>
+  <use href="#heart" fill="#ff0000"/>
+</svg>

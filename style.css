@@ -78,6 +78,9 @@ h1 { font-size: clamp(40px, 5.2vw, 64px); font-weight: 750; letter-spacing: -.04
 .page-index .hero { grid-template-columns: minmax(0, 1fr) 300px; }
 .monomial-art { margin: 0; width: 100%; }
 .monomial-art img { display: block; width: 100%; height: auto; border-radius: 8px; background: #fff; }
+.monomial-art .monomial-art-dark { display: none; background: transparent; }
+:root[data-theme="dark"] .monomial-art-light { display: none; }
+:root[data-theme="dark"] .monomial-art-dark { display: block; }
 figcaption { font-size: 12px; line-height: 1.6; color: var(--muted); margin-top: 12px; }
 .content-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; }
 .content-panel { background: var(--panel); padding: 28px 30px; min-width: 0; }

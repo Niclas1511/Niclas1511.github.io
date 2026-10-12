@@ -119,7 +119,8 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         "legal": "Website operator and contact information.",
     }.get(stem, "")
     hero_figure = '''<figure class="monomial-art">
-            <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
+            <img class="monomial-art-light" src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
+            <img class="monomial-art-dark" src="figures/ilovemonomialideals-dark.svg" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
         </figure>''' if stem == "index" else f'''<figure class="monomial-lattice">
             {monomial_lattice()}
             <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>

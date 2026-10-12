@@ -47,7 +47,7 @@ Leibniz Oberschule, Berlin
 
 ## Experience
 
-### Current position: Research Associate (Wissenschaftlicher Mitarbeiter)
+### Since April 2025: Research Associate (Wissenschaftlicher Mitarbeiter)
 
 Mathematics, Otto von Guericke University Magdeburg
 
@@ -72,4 +72,6 @@ Hallig Hooge
 ## Skills
 
 - **Languages:** English (C1), French (B1)
-- **Programming and tools:** Python, Macaulay2, Java, Pascal, Julia, C#, C, Haskell, Scala, MySQL, LaTeX, Typst, Lean
+- **Mathematical software:** Macaulay2, Lean
+- **Programming and databases:** Python, Java, Pascal, Julia, C#, C, Haskell, Scala, MySQL
+- **Typesetting:** LaTeX, Typst
