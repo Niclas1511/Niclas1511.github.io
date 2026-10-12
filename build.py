@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import date
 from html import escape
+from hashlib import sha256
 from pathlib import Path
 import sys
 import re
@@ -40,15 +41,28 @@ def read_page(path: Path) -> tuple[dict[str, str], str]:
     return metadata, "\n".join(lines[end + 1:])
 
 
-def staircase() -> str:
-    """A decorative staircase of standard monomials, drawn as a small SVG."""
-    cells = []
-    for row in range(6):
-        for column in range(6):
-            boundary = column == row - 1
-            fill = "#101e30" if boundary else "#293fc4" if column >= row else "#ffffff"
-            cells.append(f'<rect x="{column * 37}" y="{row * 37}" width="35" height="35" fill="{fill}" stroke="#dce0eb" stroke-width=".6"/>')
-    return '<svg viewBox="0 0 222 222" aria-hidden="true">' + "".join(cells) + '</svg>'
+def monomial_lattice() -> str:
+    """The Hasse diagram of squarefree monomials in three variables."""
+    nodes = {
+        0: (135, 238, "1"),
+        1: (40, 166, "x"), 2: (135, 166, "y"), 4: (230, 166, "z"),
+        3: (40, 94, "xy"), 5: (135, 94, "xz"), 6: (230, 94, "yz"),
+        7: (135, 22, "xyz"),
+    }
+    parts = ['<svg viewBox="0 0 270 260" role="img" aria-labelledby="lattice-title lattice-description">',
+             '<title id="lattice-title">The Boolean lattice B₃</title>',
+             '<desc id="lattice-description">A Hasse diagram with 1 at the bottom; x, y, z above it; '
+             'xy, xz, yz next; and xyz at the top. Each upward edge multiplies a monomial by one variable.</desc>']
+    for mask, (x, y, _) in nodes.items():
+        for bit in (1, 2, 4):
+            if not mask & bit:
+                target_x, target_y, _ = nodes[mask | bit]
+                parts.append(f'<line class="lattice-edge" x1="{x}" y1="{y}" x2="{target_x}" y2="{target_y}"/>')
+    for mask, (x, y, label) in nodes.items():
+        endpoint = ' lattice-endpoint' if mask in (0, 7) else ''
+        parts.append(f'<g class="lattice-node{endpoint}"><circle cx="{x}" cy="{y}" r="20"/>'
+                     f'<text x="{x}" y="{y}" dy=".35em" text-anchor="middle">{label}</text></g>')
+    return "".join(parts) + '</svg>'
 
 
 def render_sections(body: str, stem: str) -> str:
@@ -72,6 +86,8 @@ def render_sections(body: str, stem: str) -> str:
 
 
 def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
+    css_version = sha256((ROOT / "style.css").read_bytes()).hexdigest()[:12]
+    theme_version = sha256((ROOT / "theme.js").read_bytes()).hexdigest()[:12]
     title = escape(metadata.get("title", stem.replace("-", " ").capitalize()))
     lang = escape(metadata.get("lang", "en"), quote=True)
     subtitle = escape(metadata.get("subtitle", "Teaching · OvGU Magdeburg" if stem == "teaching" else ""))
@@ -81,13 +97,20 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
         + f'>{escape(label)}</a>' for href, label in NAV
     )
     intro = "Commutative algebra, computational algebra, and combinatorics." if stem == "index" else "Teaching activities and courses at Otto von Guericke University Magdeburg."
+    hero_figure = '''<figure class="monomial-art">
+            <img src="figures/ilovemonomialideals.png" alt="I love monomial ideals — with a glowing red heart." width="1536" height="1024">
+        </figure>''' if stem == "index" else f'''<figure class="monomial-lattice">
+            {monomial_lattice()}
+            <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>
+        </figure>'''
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="theme.js?v={theme_version}"></script>
+    <link rel="stylesheet" href="style.css?v={css_version}">
 </head>
 <body class="page-{escape(stem)}">
 <a class="skip-link" href="#content">Skip to content</a>
@@ -102,16 +125,16 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
             <h1>{title_html}</h1>
             <p class="hero-description">{intro}</p>
         </div>
-        <figure class="staircase">
-            {staircase()}
-            <figcaption>Combinatorial structure.<br>A staircase of monomials.</figcaption>
-        </figure>
+        {hero_figure}
     </header>
     <main id="content" class="content-grid">
 {render_sections(body, stem)}
     </main>
     <footer>
         <p>© {date.today().year} Niclas Niederdrenk</p>
+        <button class="theme-toggle" type="button" role="switch" aria-label="Dark mode" aria-checked="false" hidden>
+            <span>Dark mode</span><span class="theme-track" aria-hidden="true"></span>
+        </button>
         <a href="#">Back to top <span aria-hidden="true">↗</span></a>
     </footer>
 </div>

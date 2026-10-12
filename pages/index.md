@@ -6,11 +6,15 @@ lang: en
 
 ## About me
 
-I am a PhD student at [Otto von Guericke University Magdeburg](https://www.ovgu.de/) under the supervision of [Thomas Kahle](https://thomas-kahle.de/). My research interests lie in commutative algebra, computational algebra, and combinatorics, with a particular focus on monomial ideals, binomial ideals, free resolutions, and the computer algebra system [Macaulay2](https://macaulay2.com/).
+I am a PhD student at [Otto von Guericke University Magdeburg](https://www.ovgu.de/), supervised by [Thomas Kahle](https://thomas-kahle.de/).
+
+My research interests lie in commutative algebra, computational algebra, and combinatorics, with a particular emphasis on monomial and binomial ideals, free resolutions, and homological invariants. My current research focuses on signed binomial edge ideals associated with signed graphs, exploring how their algebraic properties reflect the underlying combinatorial structures.
+
+I use [Macaulay2](https://macaulay2.com/) to explore examples and develop conjectures. I am also interested in the formalization of mathematics using the proof assistant [Lean](https://lean-lang.org/).
 
 ## Besides mathematics
 
-Besides mathematics, I enjoy music (especially classical music) and I play the piano and the alto saxophone. I also like hiking, running, cycling, and skiing, and I enjoy reading books and going to the cinema.
+Outside of mathematics, I enjoy music, especially classical music, and play the piano and alto saxophone. I also like hiking, running, cycling, and skiing, as well as reading and going to the cinema.
 
 ## Activities
 
