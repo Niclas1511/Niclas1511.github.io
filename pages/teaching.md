@@ -1,6 +1,10 @@
-// title: Teaching
-// lang: en
+---
+title: Teaching
+lang: en
+---
 
+
+- Winter Semester 2025/26: Linear Algebra  for Teacher Education, Statistics & Data Analysis, Mathematical Engineering, and Physics (Prof. Thomas Kahle)
 - Summer Semester 2026: Geometry (Prof. Anna-Laura Sattelberger)
 - Summer Semester 2026: Linear Algebra II (Prof. Thomas Kahle)
 - Winter Semester 2025/26: Linear Algebra for Teacher Education, Statistics & Data Analysis, Mathematical Engineering, and Physics (Prof. Alexander Pott)
