@@ -4,7 +4,7 @@ subtitle: Niclas Niederdrenk · M.Sc. Mathematics
 lang: en
 ---
 
-*Last updated: 12 October 2026*
+*Last updated: 19 October 2026*
 
 ## Education
 
@@ -72,6 +72,6 @@ Hallig Hooge
 ## Skills
 
 - **Languages:** English (C1), French (B1)
-- **Mathematical software:** Macaulay2, Lean
+- **Mathematical software:** Macaulay2, Lean, MATLAB
 - **Programming and databases:** Python, Java, Pascal, Julia, C#, C, Haskell, Scala, MySQL
 - **Typesetting:** LaTeX, Typst

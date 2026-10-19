@@ -181,7 +181,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
 <a class="skip-link" href="#content">Skip to content</a>
 <div class="container">
     <nav class="site-nav" aria-label="Main navigation">
-        <a class="wordmark" href="index.html">n.niederdrenk<span> / </span></a>
+        <a class="wordmark" href="index.html">Niclas Niederdrenk</a>
         <div class="nav-links">{nav}</div>
     </nav>
     <header class="hero">
@@ -214,7 +214,7 @@ def main() -> int:
     outputs = []
     for path in sorted(PAGES_DIR.glob("*.md")):
         metadata, source = read_page(path)
-        body = markdown.markdown(source, extensions=["extra", "sane_lists"], output_format="html")
+        body = markdown.markdown(source, extensions=["extra", "sane_lists", "attr_list"], output_format="html")
         outputs.append((ROOT / f"{path.stem}.html", render_page(metadata, path.stem, body)))
     if not outputs:
         sys.exit("No Markdown pages found in pages/.")

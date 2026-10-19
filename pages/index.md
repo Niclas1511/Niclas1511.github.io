@@ -10,7 +10,7 @@ I am a PhD student at [Otto von Guericke University Magdeburg](https://www.ovgu.
 
 My research focuses on monomial and binomial ideals, particularly signed binomial edge ideals. I study how the combinatorics of signed graphs is reflected in the free resolutions and homological invariants of the associated ideals.
 
-I use [Macaulay2](https://macaulay2.com/) for computations and am also interested in formalizing mathematics with [Lean](https://lean-lang.org/).
+I use [Macaulay2](https://macaulay2.com/) for computations and am also interested in formalizing mathematics with [Lean](https://lean-lang.org/), as in my note [Polynomials without positive roots](notes.html#polynomials-without-positive-roots).
 
 ## Besides mathematics
 
