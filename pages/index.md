@@ -19,7 +19,7 @@ Outside of mathematics, I enjoy music, especially classical music, and play the 
 ## Conferences and summer schools
 
 
-- [Finite Geometry, Combinatorics, Boolean Functions and their Links](https://sites.google.com/view/pott65-magdeburg2026/home), Magdeburg · attended Thursday and Friday only (September 17–18, 2026)
+- [Finite Geometry, Combinatorics, Boolean Functions and their Links](https://sites.google.com/view/pott65-magdeburg2026/home), Magdeburg · attended Thursday and Friday only (September 14–18, 2026)
 - [Combinatorial Synergies — Third Annual Conference (SPP2458)](https://www.combinatorial-synergies.de/activities/2026-09_AnnualConference/), Frankfurt (Main) (September 14–16, 2026)
 - [Combinatorial Synergies — Young Researchers Conference](https://mathconf.eu/yrccs-2026/index.html), FU Berlin (May 4–8, 2026)
 - [Combinatorial Coworkspace](https://www.combinatorial-cowork.space/editions/2026/), Kleinwalsertal (March 20–28, 2026)

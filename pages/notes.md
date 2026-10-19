@@ -4,6 +4,18 @@ subtitle: Niclas Niederdrenk
 lang: en
 ---
 
+
+## Mathematical notes
+
+### Polynomials without positive roots
+
+A constructive proof that a real polynomial without positive roots
+has a nonzero multiple with nonnegative coefficients,
+accompanied by a Lean formalization.
+
+[Read the note (PDF)](documents/noposroots.pdf)
+· [Source code & Lean formalization](https://github.com/Niclas1511/polynomials-without-positive-roots)
+
 ## Master's thesis
 
 ### Gemischte Binomkantenideale

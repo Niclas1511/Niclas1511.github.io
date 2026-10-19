@@ -7,6 +7,9 @@ from datetime import date
 from html import escape
 from hashlib import sha256
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+from urllib.error import URLError
+from urllib.request import urlopen
 import sys
 import re
 
@@ -18,6 +21,37 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent
 PAGES_DIR = ROOT / "pages"
 NAV = [("index.html", "Home"), ("notes.html", "Notes & Theses"), ("teaching.html", "Teaching"), ("cv.html", "CV")]
+
+
+def download_note() -> None:
+    """Validate the external note before atomically replacing the local copy."""
+    url = "https://raw.githubusercontent.com/Niclas1511/polynomials-without-positive-roots/main/noposroots.pdf"
+    target = ROOT / "documents" / "noposroots.pdf"
+    temporary = None
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with urlopen(url, timeout=30) as response:
+            if response.status != 200:
+                raise ValueError(f"unexpected HTTP status {response.status}")
+            with NamedTemporaryFile(dir=target.parent, suffix=".pdf.tmp", delete=False) as output:
+                temporary = Path(output.name)
+                header = response.read(1024)
+                if not header.startswith(b"%PDF-"):
+                    raise ValueError("download is not a PDF (missing PDF header)")
+                output.write(header)
+                while chunk := response.read(64 * 1024):
+                    output.write(chunk)
+        with temporary.open("rb") as downloaded:
+            downloaded.seek(max(0, temporary.stat().st_size - 1024))
+            if b"%%EOF" not in downloaded.read():
+                raise ValueError("downloaded PDF appears incomplete (missing EOF marker)")
+        temporary.replace(target)
+    except (OSError, URLError, ValueError) as error:
+        sys.exit(f"Could not download mathematical note from {url}: {error}")
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    print("Downloaded documents/noposroots.pdf")
 
 
 def read_page(path: Path) -> tuple[dict[str, str], str]:
@@ -125,7 +159,13 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
             {monomial_lattice()}
             <figcaption>The Boolean lattice B₃.<br>Squarefree monomials, ordered by divisibility.</figcaption>
         </figure>''' if stem == "teaching" else ""
-    hero_contact = '<a class="hero-contact" href="mailto:niclas.niederdrenk@ovgu.de">niclas.niederdrenk@ovgu.de</a>' if stem == "index" else ""
+    hero_contact = '''<div class="hero-links">
+                <a class="hero-contact" href="mailto:niclas.niederdrenk@ovgu.de">niclas.niederdrenk@ovgu.de</a>
+                <a class="github-link" href="https://github.com/Niclas1511" rel="me">
+                    <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                    <span>GitHub</span>
+                </a>
+            </div>''' if stem == "index" else ""
     hero_description = f'<p class="hero-description">{intro}</p>' if intro else ""
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
@@ -177,6 +217,8 @@ def main() -> int:
         outputs.append((ROOT / f"{path.stem}.html", render_page(metadata, path.stem, body)))
     if not outputs:
         sys.exit("No Markdown pages found in pages/.")
+    # Download before publishing HTML; the remaining steps only write HTML files.
+    download_note()
     for target, html in outputs:
         target.write_text(html, encoding="utf-8")
         print(f"Wrote {target.name}")
