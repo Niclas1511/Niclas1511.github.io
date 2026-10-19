@@ -9,6 +9,7 @@ All page content lives in Markdown files:
 - `pages/index.md`: profile, travels/conferences (Activities), and contact details.
 - `pages/teaching.md`: teaching activities.
 - `pages/legal.md`: legal notice and operator contact details, linked in the footer of every page.
+- `pages/masters-thesis.md`: permanent thesis landing page at `/masters-thesis/`, with summary, bibliographic details, PDF download, and citation.
 - `pages/notes.md`: notes and documents, with descriptions and links to PDFs in `documents/`.
 - `pages/cv.md`: curriculum vitae. Use `##` for sections and
   `### Period: Position or degree` for individual entries, followed by the
@@ -56,7 +57,8 @@ python3 build.py
 
 The build discovers every `pages/*.md` file and writes its corresponding HTML
 file at the repository root. For example, `pages/teaching.md` becomes
-`teaching.html`. Add navigation entries to `NAV` in `build.py` for new pages.
+`teaching.html`. The permanent thesis page is the exception: `pages/masters-thesis.md`
+becomes `masters-thesis/index.html`, served at `/masters-thesis/`. Add navigation entries to `NAV` in `build.py` for new pages.
 Styling is defined in `style.css`. Typst is no longer required.
 
 Commit the Markdown sources and generated HTML together, then push to publish
@@ -68,3 +70,16 @@ entry.
 
 To preview locally, run `python3 -m http.server 8000` and open
 http://localhost:8000.
+
+## Preserve the thesis URL
+
+Keep `https://niederdrenk.de/masters-thesis/` available when redesigning the site.
+If the PDF moves, update its link in `pages/masters-thesis.md` and the
+`citation_pdf_url` metadata in `build.py`. Preserve the old PDF path as well:
+it may already have been cited directly.
+
+Keep the landing page at its current path whenever possible. GitHub Pages does
+not support custom HTTP 301 rules; if the page must move, configure a permanent
+redirect at a hosting/proxy layer that supports HTTP redirects. Do not simply
+delete `masters-thesis/index.html`. The canonical URL and citation examples should
+continue to identify the permanent address.

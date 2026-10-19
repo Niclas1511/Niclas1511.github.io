@@ -35,4 +35,5 @@ This thesis studies mixed binomial edge ideals, combining classical binomial edg
 Submitted at Otto von Guericke University Magdeburg, supervised by [Thomas Kahle](https://thomas-kahle.de/).
 
 [Read PDF](documents/2025-Niederdrenk-Gemischte-Binomkantenideale.pdf)
+[Thesis details & citation](masters-thesis/)
 {: .work-links}

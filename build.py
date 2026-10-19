@@ -143,8 +143,9 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     lang = escape(metadata.get("lang", "en"), quote=True)
     subtitle = escape(metadata.get("subtitle", "Teaching · OvGU Magdeburg" if stem == "teaching" else ""))
     title_html = title.replace("Niclas Niederdrenk", "Niclas<br>Niederdrenk")
+    prefix = "../" if stem == "masters-thesis" else ""
     nav = "\n".join(
-        f'<a href="{href}"' + (' class="current" aria-current="page"' if href == f"{stem}.html" else "")
+        f'<a href="{prefix}{href}"' + (' class="current" aria-current="page"' if href == f"{stem}.html" else "")
         + f'>{escape(label)}</a>' for href, label in NAV
     )
     intro = {
@@ -168,20 +169,31 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
                 </a>
             </div>''' if stem == "index" else ""
     hero_description = f'<p class="hero-description">{intro}</p>' if intro else ""
+    scholarly_metadata = ""
+    if stem == "masters-thesis":
+        scholarly_metadata = '''
+    <link rel="canonical" href="https://niederdrenk.de/masters-thesis/">
+    <meta name="description" content="Gemischte Binomkantenideale: Master's thesis by Niclas Niederdrenk, Otto von Guericke University Magdeburg, 2025. Summary, citation and PDF.">
+    <meta name="citation_title" content="Gemischte Binomkantenideale">
+    <meta name="citation_author" content="Niederdrenk, Niclas">
+    <meta name="citation_publication_date" content="2025/02/20">
+    <meta name="citation_dissertation_institution" content="Otto-von-Guericke-Universität Magdeburg">
+    <meta name="citation_pdf_url" content="https://niederdrenk.de/documents/2025-Niederdrenk-Gemischte-Binomkantenideale.pdf">
+    <meta name="citation_language" content="de">'''
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <script src="theme.js?v={theme_version}"></script>
-    <link rel="stylesheet" href="style.css?v={css_version}">
+    <title>{title}</title>{scholarly_metadata}
+    <script src="{prefix}theme.js?v={theme_version}"></script>
+    <link rel="stylesheet" href="{prefix}style.css?v={css_version}">
 </head>
 <body class="page-{escape(stem)}">
 <a class="skip-link" href="#content">Skip to content</a>
 <div class="container">
     <nav class="site-nav" aria-label="Main navigation">
-        <a class="wordmark" href="index.html">Niclas Niederdrenk</a>
+        <a class="wordmark" href="{prefix}index.html">Niclas Niederdrenk</a>
         <div class="nav-links">{nav}</div>
     </nav>
     <header class="hero">
@@ -197,7 +209,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     </main>
     <footer>
         <p>© {date.today().year} Niclas Niederdrenk</p>
-        <a href="legal.html"{' aria-current="page"' if stem == 'legal' else ''}>Legal notice</a>
+        <a href="{prefix}legal.html"{' aria-current="page"' if stem == 'legal' else ''}>Legal notice</a>
         <button class="theme-toggle" type="button" role="switch" aria-label="Dark mode" aria-checked="false" hidden>
             <span>Dark mode</span><span class="theme-track" aria-hidden="true"></span>
         </button>
@@ -215,12 +227,14 @@ def main() -> int:
     for path in sorted(PAGES_DIR.glob("*.md")):
         metadata, source = read_page(path)
         body = markdown.markdown(source, extensions=["extra", "sane_lists", "attr_list"], output_format="html")
-        outputs.append((ROOT / f"{path.stem}.html", render_page(metadata, path.stem, body)))
+        target = ROOT / "masters-thesis" / "index.html" if path.stem == "masters-thesis" else ROOT / f"{path.stem}.html"
+        outputs.append((target, render_page(metadata, path.stem, body)))
     if not outputs:
         sys.exit("No Markdown pages found in pages/.")
     # Download before publishing HTML; the remaining steps only write HTML files.
     download_note()
     for target, html in outputs:
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(html, encoding="utf-8")
         print(f"Wrote {target.name}")
     return 0
