@@ -61,6 +61,8 @@ Styling is defined in `style.css`. Typst is no longer required.
 
 Commit the Markdown sources and generated HTML together, then push to publish
 through the existing GitHub Pages setup. Do not edit generated HTML directly.
+The build also downloads the current mathematical note to `documents/noposroots.pdf`.
+Commit this PDF together with the generated pages so GitHub Pages can serve it.
 When deleting a Markdown page, also delete its generated HTML and navigation
 entry.
 

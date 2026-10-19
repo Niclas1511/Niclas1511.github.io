@@ -45,6 +45,7 @@ def download_note() -> None:
             downloaded.seek(max(0, temporary.stat().st_size - 1024))
             if b"%%EOF" not in downloaded.read():
                 raise ValueError("downloaded PDF appears incomplete (missing EOF marker)")
+        temporary.chmod(0o644)
         temporary.replace(target)
     except (OSError, URLError, ValueError) as error:
         sys.exit(f"Could not download mathematical note from {url}: {error}")
