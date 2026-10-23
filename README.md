@@ -15,9 +15,16 @@ All page content lives in Markdown files:
   Hold Space/Up for a full jump, release for a short hop; two jumps are available
   before landing, with a 120 ms buffer when both have been used. Down ducks or accelerates descent.
   X throws chalk horizontally at the current height (three pieces; one recharges
-  every four seconds). Successful volleys increase a multiplier up to five; hit
+  every four seconds). Successful volleys increase a multiplier without a cap; hit
   bonuses are five points times that multiplier. A completely missed volley resets
-  the combo; spread shots settle together, in throw order. Algebra and
+  the combo; spread shots settle together, in throw order. Every ten consecutive
+  successful volleys grant one stored Hagoromo charge. The next throw consumes
+  it instead of normal ammo, firing one giant labelled chalk even with spread active.
+  It detonates on impact, at the ground/screen boundary, or after 0.9 seconds,
+  clearing hazards and hostile projectiles within 180 pixels and dealing three
+  boss damage. The blast cannot harm the player or collectibles. Each blast is
+  still one volley for combo progress. Earned charges survive a later miss and
+  arena transitions; restarting clears them. Algebra and
   PhD-themed motifs are defined in `MathRunner.motifs` in `runner-engine.js`.
   Six flying motifs add students with questions, urgent emails, Reviewer 2's pen,
   epsilon chased by delta, falling problem sheets, and conference invitations.
@@ -29,17 +36,32 @@ All page content lives in Markdown files:
   hazard at ground level, plus a riskier upper reward with a trailing obstacle.
   Walk through an outlined icon: unlimited chalk lasts 10 seconds, triple
   throw lasts 10 seconds (one ammo per volley), and the animated shield lasts six
-  seconds. Different effects combine; a repeat pickup refreshes its timer. Pause
+  seconds. The Student assistant (figure icon) stays until its five lives are spent and clears
+  five hazards across all lanes, jumping into their path and recoiling with stars and an “Ouch!” on each hit.
+  Each pickup hires an additional helper with an five independent lives.
+  Helpers run in formation and reserve different targets. They remain active in boss arenas and intercept enemy shots at one life per hit. Their hits do not increase the chalk combo.
+  Homing chalk (H) lasts 10 seconds: normal projectiles arc toward visible hazards
+  or the boss before accelerating into a bright pixel impact, retarget cleared hazards, and retain normal ammo and combo rules.
+  It combines with triple throw and unlimited chalk; Hagoromo keeps its explosion.
+  Different effects combine; repeat pickups refresh timers except for assistants, which add a teammate. Pause
   freezes the timers and restarting clears them. Items cannot be collected by shooting.
   A close dodge awards 10 points and restores up to one chalk. Worksheet hits fold
   the sheet into a harmless plane, pen hits produce red particles, and students
   acknowledge their answered question. Four 24-second phases change palettes and
   encounter patterns: Lecture week, Exam season, Conference, Deadline night.
+  A faint, cached pixel-art background adds x²/ln(x) graphs, integration, circle
+  geometry, Sierpiński/Koch fractals, and all five Platonic solids. It follows
+  distance at a slow parallax rate, so it also stops during arenas and pauses.
   Office hours and Inbox overflow have two-second warnings and run for eight seconds.
   Every 60 seconds of running, after existing hazards clear, Reviewer 2 starts an
   arena fight. Scrolling, distance score, normal spawns, and the semester clock stop.
-  A/D or Left/Right moves freely; mouse/touch aims and clicks/taps throw chalk.
-  Keyboard-only aiming uses W/S, with X to throw. The boss moves and telegraphs
+  Arena controls are Left/Right to move, Space to jump, and X to throw. A/D and
+  Up remain optional aliases. Chalk flies horizontally in the last movement direction;
+  jumping sets throw height. The boss moves for 0.85 seconds then holds a position
+  for 2.35 seconds, creating jump-throw openings. Only Homing chalk steers at targets.
+  No mouse or separate aiming keys are required. Touch uses the same action buttons.
+  Space also starts or restarts the game when the canvas or page has keyboard focus.
+  The boss moves and telegraphs
   aimed shots, fan shots, and ground waves; shield power-ups still protect the player.
   Chalk recharges every second in arenas. Six aimed hits win and award 100 extra
   points. There is no escape timeout: the runner resumes only after victory and
@@ -127,8 +149,11 @@ effects, spread-shot collisions, shields, ammo rules, and collectible scheduling
 combo settlement order, near-miss rewards, reactions, phase/event patterns, both
 reward routes.
 `gjs tests/runner-arena.test.js` checks recurring arenas, frozen runner clocks,
-free movement, screen boundaries, aimed/spread throws in both directions, ammo,
+free movement, screen boundaries, automatic/spread throws in both directions, ammo,
 attack dodge routes and victories at 30/60/120 FPS, and return to the runner.
+`gjs tests/runner-hagoromo.test.js` checks ten-hit rewards, giant throws,
+blast range, damage and safe targets, finite ammo, fuse/animation cleanup,
+combo counting and arena-transition refunds.
 
 ## Preserve the thesis URL
 
@@ -142,3 +167,34 @@ not support custom HTTP 301 rules; if the page must move, configure a permanent
 redirect at a hosting/proxy layer that supports HTTP redirects. Do not simply
 delete `masters-thesis/index.html`. The canonical URL and citation examples should
 continue to identify the permanent address.
+
+Music: `assets/music/` contains complete public-domain Mutopia MIDI editions of
+Mozart’s Rondo alla Turca and Bach’s Prelude in C major (BWV 846), plus a MIDI
+conversion of a CC0 edition of Liszt’s Liebestraum No. 3, with provenance
+in `assets/music/README.md`. `runner-music.js` reads the MIDI tempo map and plays
+local files as square/triangle chiptune voices using Web Audio, without a soundfont
+or runtime dependencies. Music defaults on and starts with the game, rotates Mozart → Bach → Liszt, and pauses on
+game pause, game over, or loss of focus. M toggles music; it never plays on the ready screen. Run `gjs tests/runner-music.test.js` for
+MIDI parsing and mocked audio lifecycle checks.
+
+`runner-sound.js` provides short, synthesized action effects independently of music.
+Sound is enabled by default but its AudioContext opens only on Start or the Sound
+button. Effects cover jumps, double jumps, landing, duck/fast fall, chalk variants,
+hits and reactions, homing dives/impacts, Hagoromo explosions, pickups,
+assistant jumps/recoil, Hagoromo milestone rewards, shields,
+boss entry/attacks/hits/victory, and game over. Ordinary combo increments and
+notification messages stay silent.
+The Sound toggle mutes all effects; pause and focus loss cancel active voices and
+pending gameplay cues. Identical cues are throttled and at most 20 voices play
+at once. `gjs tests/runner-sound.test.js` checks audio scheduling and game events
+using a mocked AudioContext; actual browser listening remains a manual check.
+
+Boss arenas automatically switch enabled music to `assets/music/reviewer-2-boss.mid`,
+an original 160 BPM D-minor battle cue with driving bass and rapid arpeggios.
+After victory the selected classical track resumes from its previous position.
+The boss theme obeys the same music toggle, pause, and focus-loss behavior.
+
+Boss entry includes a 2.4-second in-canvas cinematic with letterboxing, moving
+warning stripes, a Reviewer 2 title, an impact burst and sound. Combat, timers,
+assistants, and player actions freeze until it ends. Pause/mute still work;
+reduced-motion preferences disable slides, shaking, and moving particles.

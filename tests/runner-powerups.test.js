@@ -6,7 +6,7 @@ function assert(ok,message){if(!ok)throw Error(message);}
 function create(){const state=game.create(420);state.spawnIn=Infinity;return state;}
 function pickup(state,kind){state.items.push({kind,x:78,y:220,w:28,h:28,speed:0});game.step(state,1/120);}
 function run(state,seconds){for(let i=0;i<Math.ceil(seconds*120);i++)game.step(state,1/120);}
-for(const type of game.powerupTypes){
+for(const type of game.powerupTypes.filter(type=>type.kind!=='assistant')){
  const state=create();pickup(state,type.kind);
  assert(state.powerups[type.kind]===type.duration,'walk-through pickup grants '+type.kind);
  assert(!state.items.length && state.pickupSerial===1,'collected exactly once');
@@ -52,9 +52,9 @@ const fresh=create();assert(!fresh.items.length && Object.values(fresh.powerups)
 assert(game.shotImpact({x:10,y:10,w:1,h:1},0,0,{x:5,y:5,w:1,h:1})!==null,'diagonal segment hits crossed target');
 assert(game.shotImpact({x:10,y:10,w:1,h:1},0,0,{x:8,y:1,w:1,h:1})===null,'diagonal near miss does not count');
 state=create();const kinds=[];
-for(let i=0;i<11;i++){
+for(let i=0;i<19;i++){
  state.obstacles=[];state.items=[];state.spawnIn=0;game.step(state,.01,()=>.8);
  if(state.items.length){kinds.push(state.items[0].kind);assert(state.items.length===2 && state.obstacles.every(o=>o.optional),'safe and risky rewards with optional upper obstacle');}
 }
-assert(kinds.join(',')==='infinite,spread,shield','all item types appear in cycle');
+assert(kinds.join(',')==='infinite,spread,shield,assistant,homing','all item types appear in cycle');
 print('Passed: item collection/misses, refresh/expiry, infinite ammo, triple trajectories, combined effects, shield collisions, scheduling and restart.');

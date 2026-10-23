@@ -198,7 +198,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
             f'<link rel="stylesheet" href="runner.css?v={sha256((ROOT / "runner.css").read_bytes()).hexdigest()[:12]}">'
             if asset == "runner.css" else
             f'<script defer src="{asset}?v={sha256((ROOT / asset).read_bytes()).hexdigest()[:12]}"></script>'
-            for asset in ("runner.css", "runner-engine.js", "runner.js")
+            for asset in ("runner.css", "runner-engine.js", "runner-music.js", "runner-sound.js", "runner.js")
         )
     return f'''<!DOCTYPE html>
 <html lang="{lang}">

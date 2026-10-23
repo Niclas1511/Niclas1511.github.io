@@ -21,11 +21,11 @@ assert(s.jumps===1 && s.vy<0,'jump pressed just before landing is buffered');
 s=create();s.y=180;s.vy=-100;s.jumps=2;game.jump(s);run(s,1);
 assert(s.y===252 && s.jumps===0,'old buffered input expires instead of causing a late jump');
 s=create();s.powerups.infinite=100;
-for(let i=0;i<6;i++){target(s);assert(game.throwChalk(s),'combo shot');run(s,.3);assert(s.multiplier===Math.min(5,i+1),'multiplier increases to cap');}
-assert(s.bonus===100 && s.streak===6,'six successive hits earn 5+10+15+20+25+25');
+for(let i=0;i<6;i++){target(s);assert(game.throwChalk(s),'combo shot');run(s,.3);assert(s.multiplier===i+1,'multiplier increases beyond five');}
+assert(s.bonus===105 && s.streak===6,'six successive hits earn 5+10+15+20+25+30');
 assert(game.throwChalk(s),'missed shot');run(s,1);
 assert(s.streak===0 && s.multiplier===1,'miss resets combo');
-target(s);game.throwChalk(s);run(s,.3);assert(s.bonus===105,'next hit starts again at five points');
+target(s);game.throwChalk(s);run(s,.3);assert(s.bonus===110,'next hit starts again at five points');
 s=create();s.powerups.infinite=100;s.powerups.spread=100;
 target(s);game.throwChalk(s);run(s,.8);
 assert(s.streak===1 && s.bonus===5 && !s.volleys.length,'one hit in spread volley prevents its other shots from resetting combo');
