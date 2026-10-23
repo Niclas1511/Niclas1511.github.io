@@ -25,11 +25,24 @@
     let announcedScene = '';
     let announcedPickup = 0;
     let announcedReward = 0;
+    const livesDisplay = document.querySelector('#runner-lives');
     const score = document.querySelector('#runner-score');
     const bestDisplay = document.querySelector('#runner-best');
     const status = document.querySelector('#runner-status');
     const music = typeof RunnerMusic !== 'undefined' ? RunnerMusic.create(document.querySelector('#runner-music'), document.querySelector('#runner-track'), status) : null;
     const sound = typeof RunnerSound !== 'undefined' ? RunnerSound.create(document.querySelector('#runner-sound'), status) : null;
+    const nextTrackButton = document.querySelector('#runner-next-track');
+    nextTrackButton.addEventListener('click', () => { if (!state.boss && (mode === 'running' || mode === 'paused')) music?.next(); });
+    const muteButton = document.querySelector('#runner-mute');
+    let muted = false;
+    function toggleMute() {
+        muted = !muted;
+        if (muted) state.sounds.length = 0;
+        music?.setMuted(muted); sound?.setMuted(muted);
+        muteButton.textContent = muted ? 'Unmute · M' : 'Mute · M';
+        muteButton.setAttribute('aria-pressed', String(muted));
+    }
+    muteButton.addEventListener('click', toggleMute);
     const storageKey = 'niederdrenk-math-run-best';
     let best = 0;
     try { best = Math.max(0, Number(localStorage.getItem(storageKey)) || 0); } catch (_) { }
@@ -177,6 +190,7 @@
         '   kk  kk   ', '  kkk  kkk  '
     ];
     function drawStudent() {
+        if (state.hurt > 0 && Math.floor(state.time * 12) % 2 === 0) return;
         const player = MathRunner.player(state);
         const avatarRect = (x, y, w, h, color) => rect(player.x + (state.facing < 0 ? 24 - x - w : x), y, w, h, color);
         if (state.duck && state.y === MathRunner.ground) {
@@ -338,7 +352,7 @@
         for (let i = 0; i < helper.hits; i++) rect(x - 1 + i * 6, y - 20, 4, 3, '#c5b0de');
     }
     function drawItem(item) {
-        const type = MathRunner.powerupTypes.find(type => type.kind === item.kind);
+        const type = item.kind === 'heart' ? { color: '#e87878' } : MathRunner.powerupTypes.find(type => type.kind === item.kind);
         const { x, y } = item;
         rect(x + 3, y, 22, 28, colors.grid);
         rect(x, y + 3, 28, 22, colors.grid);
@@ -346,7 +360,11 @@
         rect(x + 4, y + 26, 20, 2, type.color);
         rect(x, y + 4, 2, 20, type.color);
         rect(x + 26, y + 4, 2, 20, type.color);
-        if (item.kind === 'assistant') {
+        if (item.kind === 'heart') {
+            ['0110110','1111111','1111111','0111110','0011100','0001000'].forEach((row, j) => {
+                [...row].forEach((pixel, i) => { if (pixel === '1') rect(x + 4 + i * 3, y + 5 + j * 3, 3, 3, type.color); });
+            });
+        } else if (item.kind === 'assistant') {
             rect(x + 10, y + 5, 8, 8, type.color);
             rect(x + 8, y + 14, 12, 7, type.color);
             rect(x + 8, y + 21, 4, 4, type.color);
@@ -362,7 +380,8 @@
         }
         const phase = state.time * 3;
         rect(x + 14 + Math.cos(phase) * 20, y + 14 + Math.sin(phase) * 19, 2, 2, type.color);
-        pixelText(item.risky ? 'RISK / REWARD' : 'PICK UP', x + 14, y - 7, 7, type.color, item.risky ? 76 : 43);
+        pixelText(item.arena ? 'DOUBLE JUMP' : item.risky ? 'RISK / REWARD' : 'PICK UP', x + 14, y - 7, 7, type.color, item.arena || item.risky ? 76 : 43);
+        if (item.arena) pixelText(`${Math.ceil(item.life)}s`, x + 14, y + 36, 9, type.color, 28);
     }
     function drawShield() {
         if (!state.powerups.shield) return;
@@ -380,6 +399,8 @@
         }
     }
     function updateHud() {
+        livesDisplay.textContent = '♥'.repeat(state.lives) + '♡'.repeat(state.maxLives - state.lives);
+        livesDisplay.setAttribute('aria-label', `${state.lives} of ${state.maxLives} lives`);
         score.textContent = String(state.score);
         chalkDisplay.textContent = state.powerups.infinite > 0 ? '∞' : String(state.chalk);
         chalkCapacity.hidden = state.powerups.infinite > 0;
@@ -395,16 +416,20 @@
         if (intro !== previousIntro) { clearInputs(); previousIntro = intro; setControls(mode === 'running' && !intro); }
         const arena = Boolean(state.boss);
         music?.setBoss(arena);
+        nextTrackButton.disabled = arena || (mode !== 'running' && mode !== 'paused');
         if (arena !== previousArena) { clearInputs(); previousArena = arena; }
         arenaControls.hidden = !arena;
         duckButton.hidden = arena;
         leftButton.disabled = rightButton.disabled = mode !== 'running' || !arena || intro;
         canvas.setAttribute('data-arena', String(arena));
         controlsHint.textContent = arena
-            ? 'Boss: ← / → move · Space jump · X throw · Jump to aim · M mute'
-            : 'Hold Space / ↑ jump higher · Tap twice double jump · ↓ duck / fast fall · X chalk · P pause · M mute music';
+            ? 'Boss: ← / → move · Space jump · X throw · Jump to aim · M mute · N next track'
+            : 'Hold Space / ↑ jump higher · Tap twice double jump · ↓ duck / fast fall · X chalk · P pause · M mute all · N next track';
         const bossWarning = !arena && (state.runTime ?? state.time) >= state.nextBossAt - 3;
-        const scene = intro ? 'Reviewer 2 is arriving…' : arena ? `Reviewer 2 · ${state.boss.hp}/6 comments left · Jump to aim`
+        const bossName = state.boss?.name || 'Reviewer 2';
+        const scene = intro ? `${bossName} is arriving…` : arena ? state.boss.type === 'blackboard'
+            ? `${bossName} · ${state.boss.hp}/${state.boss.maxHp} · ${state.boss.open ? 'Hit the eraser!' : 'Drawing a graph…'}`
+            : `${bossName} · ${state.boss.hp}/6 comments left · Jump to aim`
             : bossWarning ? 'Boss arena incoming — the run will stop!'
             : state.event ? `${state.event.label}${state.event.warning ? ' incoming…' : ` · ${Math.ceil(state.event.remaining)}s`}` : '';
         eventDisplay.textContent = scene;
@@ -423,9 +448,35 @@
             status.textContent = '10-hit combo! Hagoromo ready. Your next throw fires giant explosive chalk.';
         }
     }
+    function drawBlackboard(boss) {
+        const { x, y, w, h } = boss;
+        rect(x - 4, y - 4, w + 8, h + 8, '#92785b');
+        rect(x, y, w, h, '#25463f');
+        rect(x - 7, y + h, w + 14, 5, '#b49970');
+        pixelText('THE BLACKBOARD', x + w / 2, y - 22, 10, colors.mint, w + 18);
+        for (let i = 0; i < boss.maxHp; i++) rect(x + i * 15, y - 12, 11, 4, i < boss.hp ? colors.mint : colors.muted);
+        const progress = boss.open ? 1 : Math.min(1, boss.cycle / 1.2);
+        const sine = boss.pattern % 2;
+        rect(x + 12, y + 54, w - 24, 1, colors.muted);
+        rect(x + 16, y + 12, 1, 48, colors.muted);
+        for (let i = 0; i <= Math.floor(88 * progress); i++) {
+            const u = i / 88;
+            const gy = sine ? 36 - Math.sin(u * Math.PI * 3) * 15 : 55 - (u - .5) ** 2 * 150;
+            rect(x + 18 + i, y + gy, 2, 2, colors.ink);
+        }
+        pixelText(sine ? 'sin x' : 'x²', x + w - 23, y + 11, 10, colors.ink, 40);
+        if (boss.open && boss.eraser) {
+            const eraser = boss.eraser;
+            rect(eraser.x - 3, eraser.y - 3, eraser.w + 6, eraser.h + 6, colors.gold);
+            rect(eraser.x, eraser.y, eraser.w, eraser.h, '#b49970');
+            rect(eraser.x + 2, eraser.y + 10, eraser.w - 4, 6, colors.ink);
+        }
+        pixelText(boss.open ? 'HIT THE ERASER' : 'DRAWING…', x + w / 2, y + h + 18, 9, boss.open ? colors.gold : colors.ink, w + 14);
+    }
     function drawBoss() {
         const boss = state.boss;
         if (!boss) return;
+        if (boss.type === 'blackboard') { drawBlackboard(boss); return; }
         const { x, y, w } = boss;
         rect(x + 16, y + 9, w - 20, 13, '#e87878');
         rect(x + 8, y + 12, 10, 7, colors.gold);
@@ -505,8 +556,8 @@
         const impact = reducedMotion ? 0 : Math.max(0, 1 - Math.abs(t - 1.15) / .28);
         const shake = Math.sin(t * 75) * impact * 5;
         pixelText('BOSS ENCOUNTER', w / 2 - entrance, 113, 12, '#e4bd7a', w - 40);
-        pixelText('REVIEWER 2', w / 2 + entrance + shake, 155, Math.min(38, w / 13), '#e87878', w - 36);
-        pixelText(t < 1.15 ? 'Your proof is under review.' : 'REVISE. RESUBMIT. SURVIVE.', w / 2, 191, 12, colors.ink, w - 40);
+        pixelText((state.boss?.name || 'Reviewer 2').toUpperCase(), w / 2 + entrance + shake, 155, Math.min(38, w / 13), '#e87878', w - 36);
+        pixelText(state.boss?.type === 'blackboard' ? (t < 1.15 ? 'The graphs are coming alive.' : 'DODGE THE GRAPH. HIT THE ERASER.') : (t < 1.15 ? 'Your proof is under review.' : 'REVISE. RESUBMIT. SURVIVE.'), w / 2, 191, 12, colors.ink, w - 40);
         if (t > 1.15 && !reducedMotion) {
             const radius = (t - 1.15) * 340;
             for (let i = 0; i < 28; i++) {
@@ -528,7 +579,7 @@
         ctx.fillStyle = colors.muted;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText(state.boss ? 'BOSS ARENA · REVIEWER 2' : phase.label.toUpperCase(), 20, 30);
+        ctx.fillText(state.boss ? `BOSS ARENA · ${(state.boss.name || 'Reviewer 2').toUpperCase()}` : phase.label.toUpperCase(), 20, 30);
         // Three quiet guide lines make incoming obstacle heights easy to read.
         for (const band of MathRunner.bands) {
             for (let x = 120; x < canvas.width; x += 16) rect(x, band.y + band.h / 2, 3, 1, colors.grid);
@@ -551,6 +602,11 @@
         drawBoss();
         drawThrowGuide();
         for (const shot of state.enemyShots) {
+            if (shot.graph) {
+                for (const point of shot.trail || []) rect(point.x + shot.w / 2, point.y + shot.h / 2, 2, 2, colors.mint);
+                pixelText(shot.graph === 'sine' ? '∿' : 'x²', shot.x + shot.w / 2, shot.y + shot.h / 2, 16, colors.ink, 24);
+                continue;
+            }
             rect(shot.x, shot.y, shot.w, shot.h, colors.pink);
             if (shot.wave) pixelText("!", shot.x + shot.w / 2, shot.y + 10, 13, colors.sky, shot.w);
         }
@@ -615,6 +671,7 @@
         status.textContent = text;
     }
     function setControls(enabled) {
+        nextTrackButton.disabled = Boolean(state.boss) || (mode !== 'running' && mode !== 'paused');
         pauseButton.disabled = mode !== 'running' && mode !== 'paused';
         enabled = enabled && !state.bossIntro;
         jumpButton.disabled = !enabled;
@@ -647,6 +704,7 @@
     }
     function run() {
         const resuming = mode === 'paused';
+        if (!resuming) { sound?.stop(); music?.restart(); }
         sound?.unlock()?.then(() => { if (mode === 'running') sound.play(resuming ? 'resume' : 'start'); });
         if (mode !== 'paused') {
             state = MathRunner.create(canvas.width);
@@ -688,7 +746,7 @@
         draw();
     }
     // Audio controls must hand keyboard control back to the active game.
-    for (const selector of ['#runner-sound', '#runner-music']) {
+    for (const selector of ['#runner-sound', '#runner-music', '#runner-mute', '#runner-next-track']) {
         document.querySelector(selector).addEventListener('click', () => {
             if (mode === 'running' || mode === 'paused') canvas.focus({ preventScroll: true });
         });
@@ -759,10 +817,16 @@
         event.preventDefault(); event.stopPropagation(); releaseJump(`button-${event.code}`);
     });
     document.addEventListener('keydown', event => {
+        if (event.code === 'KeyN' && !event.target?.isContentEditable &&
+            !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
+            event.preventDefault();
+            if (!event.repeat && !state.boss && (mode === 'running' || mode === 'paused')) music?.next();
+            return;
+        }
         if (event.code === 'KeyM' && !event.target?.isContentEditable &&
             !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
             event.preventDefault();
-            if (!event.repeat) music?.toggle();
+            if (!event.repeat) toggleMute();
             return;
         }
         if (!['Space', 'ArrowUp', 'ArrowDown', 'KeyP', 'KeyX', 'ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(event.code)) return;

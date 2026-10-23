@@ -4,7 +4,7 @@ const [,bytes]=GLib.file_get_contents('runner-engine.js');
 const engine=new Function(new TextDecoder().decode(bytes)+';return MathRunner;')();
 function assert(value,message){if(!value)throw Error(message);}
 function spawn(index,width=420,time=100) {
-    const state=engine.create(width);state.time=time;state.spawnIn=0;state.nextBossAt=Infinity;
+    const state=engine.create(width);state.lives=1;state.time=time;state.spawnIn=0;state.nextBossAt=Infinity;
     const values=[.4,.2,0,(index+.1)/engine.flyers.length,.5];
     engine.step(state,1/120,()=>values.shift());state.spawnIn=Infinity;
     return state;

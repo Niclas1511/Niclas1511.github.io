@@ -39,9 +39,9 @@ state.obstacles=[{x:78,y:222,w:62,h:30,speed:1}];game.step(state,.01);
 assert(!state.over && !state.obstacles.length,'shield breaks touching hazard');
 state.obstacles=[{...game.flyers[0],x:78,baseY:176,speed:1,age:0}];game.step(state,.01);
 assert(!state.over && state.obstacles[0].resolved,'shield safely resolves student');
-state.obstacles=[];state.powerups.shield=.001;
+state.obstacles=[];state.lives=3;state.powerups.shield=.001;
 state.obstacles=[{x:78,y:222,w:62,h:30,speed:1}];game.step(state,.01);
-assert(state.over,'collisions become lethal after shield expires');
+assert(!state.over && state.lives===2,'collision costs a life after shield expires');
 state=create();state.items=[{kind:'shield',x:78,y:220,w:28,h:28,speed:0}];
 state.obstacles=[{x:78,y:222,w:62,h:30,speed:1}];game.step(state,.01);
 assert(!state.over && state.powerups.shield===6,'pickup protects in the same simulation step');
@@ -54,6 +54,7 @@ assert(game.shotImpact({x:10,y:10,w:1,h:1},0,0,{x:8,y:1,w:1,h:1})===null,'diagon
 state=create();const kinds=[];
 for(let i=0;i<19;i++){
  state.obstacles=[];state.items=[];state.spawnIn=0;game.step(state,.01,()=>.8);
+ if(state.items[0]?.kind==='heart'){assert(!state.obstacles.length,'heart has a safe collection route');continue;}
  if(state.items.length){kinds.push(state.items[0].kind);assert(state.items.length===2 && state.obstacles.every(o=>o.optional),'safe and risky rewards with optional upper obstacle');}
 }
 assert(kinds.join(',')==='infinite,spread,shield,assistant,homing','all item types appear in cycle');

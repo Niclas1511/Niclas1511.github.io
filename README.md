@@ -53,7 +53,7 @@ All page content lives in Markdown files:
   geometry, Sierpiński/Koch fractals, and all five Platonic solids. It follows
   distance at a slow parallax rate, so it also stops during arenas and pauses.
   Office hours and Inbox overflow have two-second warnings and run for eight seconds.
-  Every 60 seconds of running, after existing hazards clear, Reviewer 2 starts an
+  Every 60 seconds of running, after existing hazards clear, a boss starts an
   arena fight. Scrolling, distance score, normal spawns, and the semester clock stop.
   Arena controls are Left/Right to move, Space to jump, and X to throw. A/D and
   Up remain optional aliases. Chalk flies horizontally in the last movement direction;
@@ -173,8 +173,8 @@ Mozart’s Rondo alla Turca and Bach’s Prelude in C major (BWV 846), plus a MI
 conversion of a CC0 edition of Liszt’s Liebestraum No. 3, with provenance
 in `assets/music/README.md`. `runner-music.js` reads the MIDI tempo map and plays
 local files as square/triangle chiptune voices using Web Audio, without a soundfont
-or runtime dependencies. Music defaults on and starts with the game, rotates Mozart → Bach → Liszt, and pauses on
-game pause, game over, or loss of focus. M toggles music; it never plays on the ready screen. Run `gjs tests/runner-music.test.js` for
+or runtime dependencies. Music defaults on and starts with the game, rotates Liszt → Mozart → Bach Prelude → Italian Concerto I → Italian Concerto II, and pauses on
+game pause, game over, or loss of focus. M mutes/unmutes all music and effects; it never plays on the ready screen. Run `gjs tests/runner-music.test.js` for
 MIDI parsing and mocked audio lifecycle checks.
 
 `runner-sound.js` provides short, synthesized action effects independently of music.
@@ -195,6 +195,35 @@ After victory the selected classical track resumes from its previous position.
 The boss theme obeys the same music toggle, pause, and focus-loss behavior.
 
 Boss entry includes a 2.4-second in-canvas cinematic with letterboxing, moving
-warning stripes, a Reviewer 2 title, an impact burst and sound. Combat, timers,
+warning stripes, the boss title, an impact burst and sound. Combat, timers,
 assistants, and player actions freeze until it ends. Pause/mute still work;
 reduced-motion preferences disable slides, shaking, and moving particles.
+
+Player health starts at one heart and caps at five. Every eighth runner
+encounter offers a pixel heart on a clear ground route instead of a hazard.
+Walk-through collection restores one life; chalk cannot collect hearts.
+Obstacle or boss-shot damage costs one life and grants 1.5 seconds of blinking
+recovery protection shared by all hazards. Shields preserve health. Lives carry
+into/out of boss arenas; only zero hearts ends the game. Restart resets health.
+`gjs tests/runner-hearts.test.js` checks health, collection, recovery, shields,
+cinematic freezes and boss projectiles at 30/60/120 FPS.
+
+Reviewer 2 and The Blackboard alternate between boss encounters. Blackboard draws
+for 1.2 seconds, then launches a bouncing parabola or low sine-wave projectile
+and exposes its eraser for 3.6 seconds. The board panel stays armored; only the
+eraser takes damage (8 HP, 3 damage from Hagoromo). Homing targets the exposed
+eraser. Assistants can intercept graph projectiles. Boss name, health, intro and
+renderer adapt to the encounter. `gjs tests/runner-blackboard.test.js` checks
+armor, weak points, attack paths, power-ups, victories and single-life dodge routes.
+The two Italian Concerto MIDIs are unmodified CC BY-SA 3.0 Mutopia files with
+credits/license links in the game's help and `assets/music/README.md`.
+
+Each new run starts with Liebestraum No. 3 from the beginning. N or Next skips
+to the next classical track without changing mute/pause settings. Boss themes
+cannot be skipped. Pausing/resuming preserves the current track and position.
+
+Boss arenas offer one elevated power-up after 18 combat seconds, then at random
+intervals of 24–34 seconds. It appears on the side farther from the player, at
+y=58–76, requiring a double jump, and expires after 6.5 seconds. It stays fixed
+in the arena, obeys pause/cinematic freezes, and disappears on victory. All five
+power-up types can appear; no extra notification tone is played.

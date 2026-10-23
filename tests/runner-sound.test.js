@@ -25,6 +25,11 @@ for(const cue of Object.keys(audio.cues)){
  const count=context.nodes.length;effects.play(cue);assert(context.nodes.length===count,'duplicate events throttled '+cue);
  effects.stop();assert(context.nodes.slice(before).every(n=>n.stopped==='immediate'),'stop cancels every voice');
 }
+context.currentTime+=1;
+const defeatStart=context.nodes.length;effects.play('over');
+const defeat=context.nodes.slice(defeatStart);
+assert(defeat.length===4 && defeat.every((n,i)=>!i||n.started>defeat[i-1].started),'defeat plays four descending steps');
+effects.stop();
 const before=context.nodes.length;
 effects.drain({sounds:['jump','doubleJump','throw']});assert(context.nodes.length===before+3,'queue plays separate actions');
 const state={sounds:['hit']};effects.drain(state);assert(!state.sounds.length,'queue drains once');
@@ -33,6 +38,10 @@ const capStart=context.nodes.length;
 for(let i=0;i<100;i++){context.currentTime+=.08;effects.play('jump');}
 assert(context.nodes.length-capStart===20,'voice budget limits simultaneous sources to twenty');
 const limited=context.nodes.length;effects.play('hit');assert(context.nodes.length===limited,'simultaneous voice cap');
+effects.setMuted(true);const globalCount=context.nodes.length;effects.play('jump');
+assert(context.nodes.length===globalCount,'master mute suppresses effects');
+effects.setMuted(false);context.currentTime+=1;effects.play('jump');
+assert(context.nodes.length>globalCount,'master unmute restores enabled effects');
 button.events.click();const muted=context.nodes.length;effects.play('jump');assert(context.nodes.length===muted&&button['aria-pressed']==='false','mute independent of music');
 const engine=new Function(read('runner-engine.js')+';return MathRunner;')();
 let s=engine.create();s.spawnIn=Infinity;s.nextBossAt=Infinity;

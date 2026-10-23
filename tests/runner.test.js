@@ -6,6 +6,7 @@ function assert(condition, message) { if (!condition) throw Error(message); }
 function obstacle(band, x = 80) { return { ...engine.bands[band], x, w: 62, band, variant: 0 }; }
 function trial(band, action, initialTime = 0, dt = 1 / 120) {
     const state = engine.create(420);
+    state.lives = 1; // Collision routes are tested with one life remaining.
     state.time = initialTime;
     state.spawnIn = Infinity;
     const speed = Math.min(280, 180 + initialTime * 1.3);

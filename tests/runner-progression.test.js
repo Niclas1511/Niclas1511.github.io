@@ -31,7 +31,7 @@ target(s);game.throwChalk(s);run(s,.8);
 assert(s.streak===1 && s.bonus===5 && !s.volleys.length,'one hit in spread volley prevents its other shots from resetting combo');
 s=create();s.powerups.spread=100;target(s);game.throwChalk(s);run(s,.15);
 assert(s.volleys.length===1 && s.volleys[0].hits===1,'successful spread volley still has airborne shots');
-s.obstacles=[{x:78,y:222,w:62,h:30,speed:1}];game.step(s,.01);
+s.lives=1;s.obstacles=[{x:78,y:222,w:62,h:30,speed:1}];game.step(s,.01);
 assert(s.over && s.bonus===5 && !s.volleys.length && !s.shots.length,'game over cashes in pending successful volleys');
 // Later shots can finish first. Settlement follows throw order, not collision order.
 s=create();s.powerups.infinite=100;s.streak=3;s.multiplier=3;

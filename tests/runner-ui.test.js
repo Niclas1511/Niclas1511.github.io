@@ -29,24 +29,29 @@ let nextFrame=0;const callbacks=new Map();
 function requestAnimationFrame(fn){callbacks.set(++nextFrame,fn);return nextFrame;}
 function cancelAnimationFrame(id){callbacks.delete(id);}
 function advance(time){const entries=[...callbacks];callbacks.clear();for(const [,fn] of entries)fn(time);}
-let musicMutes=0, musicBoss=false, musicRunning=false, soundUnlocked=0, soundStops=0;
+let musicSkips=0, musicRestarts=0, musicMutes=0, musicBoss=false, musicRunning=false, soundMuted=false, soundUnlocked=0, soundStops=0;
 const playedSounds=[];
-const RunnerSound={create(){return {unlock(){soundUnlocked++;return Promise.resolve();},play(cue){playedSounds.push(cue);},stop(){soundStops++;},drain(state){playedSounds.push(...state.sounds.splice(0));}};}};
-const RunnerMusic={create(button,select,status){assert(button && select && status,'music controls connected');return {toggle(){musicMutes++;},setBoss(value){musicBoss=value;},setRunning(value){musicRunning=value;}};}};
+const RunnerSound={create(){return {setMuted(value){soundMuted=value;},unlock(){soundUnlocked++;return Promise.resolve();},play(cue){playedSounds.push(cue);},stop(){soundStops++;},drain(state){playedSounds.push(...state.sounds.splice(0));}};}};
+const RunnerMusic={create(button,select,status){assert(button && select && status,'music controls connected');return {next(){musicSkips++;},restart(){musicRestarts++;},setMuted(value){musicMutes++;this.muted=value;},setBoss(value){musicBoss=value;},setRunning(value){musicRunning=value;}};}};
 eval(read('runner.js'));
 assert(draws>0,'initial pixel scene draws');assert(canvas.width===440,'responsive world width');
 assert(!callbacks.size,'ready screen does not animate');
 document.fire('keydown',{code:'KeyM',target:canvas,repeat:false,preventDefault(){}});
 document.fire('keydown',{code:'KeyM',target:canvas,repeat:true,preventDefault(){}});
-assert(musicMutes===1,'M toggles once per press');
+assert(musicMutes===1 && soundMuted,'M toggles once per press');
 document.fire('keydown',{code:'KeyM',target:{tagName:'SELECT'},repeat:false,preventDefault(){throw Error('selector key intercepted');}});
-assert(musicMutes===1,'editable controls keep their own keyboard input');
+assert(musicMutes===1 && soundMuted,'editable controls keep their own keyboard input');
 const start=elements['#runner-start'],pause=elements['#runner-pause'];
 document.fire('keydown',{code:'Space',target:canvas,repeat:false,preventDefault(){}});
 assert(elements['#runner-overlay'].hidden,'Space starts the game without a mouse');
 assert(!pause.disabled && callbacks.size===1,'starts exactly one loop');
 assert(musicRunning,'starting game starts enabled music');
 assert(soundUnlocked===1,'start gesture unlocks sound effects');
+assert(musicRestarts===1,'new run starts playlist from Liebestraum');
+document.fire('keydown',{code:'KeyN',target:canvas,repeat:false,preventDefault(){}});
+document.fire('keydown',{code:'KeyN',target:canvas,repeat:true,preventDefault(){}});
+assert(musicSkips===1,'N skips once per press');
+elements['#runner-next-track'].fire('click');assert(musicSkips===2,'Next button skips music');
 const key=code=>({code,target:canvas,repeat:false,preventDefault(){}});
 document.fire('keydown',key('ArrowUp'));document.fire('keydown',key('ArrowUp'));
 document.fire('keydown',{...key('ArrowUp'),repeat:true});
@@ -153,7 +158,7 @@ document.fire('keyup',{code:'KeyD'});assert(currentState.move===0,'keyup stops w
 const left=elements['#runner-left'];left.fire('pointerdown',{pointerId:92,preventDefault(){}});
 assert(currentState.move===-1,'touch left button moves left');
 left.fire('pointercancel',{pointerId:92});assert(currentState.move===0,'touch cancellation releases movement');
-assert(elements['#runner-controls-hint'].textContent==='Boss: ← / → move · Space jump · X throw · Jump to aim · M mute','arena advertises only four gameplay keys');
+assert(elements['#runner-controls-hint'].textContent==='Boss: ← / → move · Space jump · X throw · Jump to aim · M mute · N next track','arena advertises only four gameplay keys');
 assert(elements['#runner-duck'].hidden,'extra duck action hidden during boss fight');
 const throwsBeforePointer=throwCalls, automaticTarget=currentState.aim;
 canvas.fire('pointermove',{clientX:140,clientY:65});
@@ -205,7 +210,7 @@ currentState.bossIntro.age=1.2;advance(renderTime+=17);
 assert(drawnText.includes('REVISE. RESUBMIT. SURVIVE.'),'impact changes cinematic subtitle');
 for(let i=0;i<90;i++)advance(renderTime+=17);
 assert(!currentState.bossIntro&&!elements['#runner-jump'].disabled,'cinematic restores gameplay controls');
-for(const selector of ['#runner-sound','#runner-music']) {
+for(const selector of ['#runner-sound','#runner-music','#runner-mute']) {
  const button=elements[selector];button.focus();button.fire('click',{detail:1});
  assert(document.activeElement===canvas,'audio toggle returns focus to game');
  const before=throwCalls;document.fire('keydown',{...key('KeyX'),target:document.activeElement});
@@ -215,4 +220,15 @@ for(const selector of ['#runner-sound','#runner-music']) {
  document.fire('keydown',{...key('KeyP'),target:document.activeElement});
  assert(elements['#runner-overlay'].hidden,'P resumes after toggling audio during pause');
 }
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];
+currentState.lives=2;currentState.hurt=1;currentState.items=[{kind:'heart',x:78,y:220,w:28,h:28,speed:0}];
+currentState.y=252;currentState.vy=0;currentState.x=76;advance(renderTime+=17);advance(renderTime+=17);
+assert(currentState.lives===3 && elements['#runner-lives'].textContent==='♥♥♥♡♡','collected pixel heart updates lives display');
+assert(elements['#runner-lives'].attrs['aria-label']==='3 of 5 lives','health display has accessible count');
+currentState.boss={kind:'boss',type:'blackboard',name:'The Blackboard',x:270,y:100,w:122,h:76,hp:8,maxHp:8,age:0,cycle:.4,pattern:0};
+currentState.bossIntro={age:.4,duration:2.4,impact:false};advance(renderTime+=17);
+assert(drawnText.includes('THE BLACKBOARD')&&drawnText.includes('The graphs are coming alive.'),'Blackboard has its own cinematic title');
+currentState.bossIntro=null;currentState.boss.cycle=1.3;advance(renderTime+=17);
+assert(drawnText.includes('HIT THE ERASER')&&elements['#runner-event'].textContent.includes('The Blackboard'),'board and weak point use correct UI');
+assert(drawnText.includes('x²'),'parabola graph renders as math');
 print('Passed: initial render, responsive sizing, start, pause/resume, blur, touch release, game over, score persistence fallback and restart.');

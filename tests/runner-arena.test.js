@@ -5,7 +5,7 @@ const game=new Function(new TextDecoder().decode(bytes)+';return MathRunner;')()
 function assert(ok,message){if(!ok)throw Error(message);}
 function run(s,seconds,dt=1/120){for(let i=0;i<Math.ceil(seconds/dt);i++)game.step(s,dt,()=>.8);}
 function arena(width=420,dt=1/120){
- const s=game.create(width);s.time=60;s.spawnIn=Infinity;
+ const s=game.create(width);s.lives=1;s.time=60;s.spawnIn=Infinity;
  game.step(s,dt);assert(s.boss,'boss starts after sixty running seconds');s.bossIntro=null;return s;
 }
 let s=game.create();s.time=60;s.obstacles=[{x:200,y:132,w:62,h:28,speed:1}];

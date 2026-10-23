@@ -64,12 +64,13 @@ var RunnerMusic = (() => {
     }
     function create(button, select, status) {
         let context, master, song, timer, origin = 0, index = 0, generation = 0;
-        let enabled = true, running = false, boss = false, activePath = '';
-        const playlist = ['assets/music/mozart-rondo-alla-turca.mid', 'assets/music/bach-prelude-c-major.mid', 'assets/music/liszt-liebestraum-no-3.mid'];
+        let enabled = true, muted = false, running = false, boss = false, activePath = '';
+        const playlist = ['assets/music/liszt-liebestraum-no-3.mid', 'assets/music/mozart-rondo-alla-turca.mid', 'assets/music/bach-prelude-c-major.mid', 'assets/music/bach-italian-concerto-1.mid', 'assets/music/bach-italian-concerto-2.mid'];
+        select.value = playlist[0];
         const bossPath = 'assets/music/reviewer-2-boss.mid';
         const positions = new Map();
         const voices = new Set(), cache = new Map();
-        const label = () => { button.textContent = enabled ? 'Music: on · M' : 'Music: off · M'; button.setAttribute('aria-pressed', String(enabled)); };
+        const label = () => { button.textContent = enabled ? 'Music: on' : 'Music: off'; button.setAttribute('aria-pressed', String(enabled)); };
         function silence() {
             clearInterval(timer); timer = null;
             for (const voice of voices) { try { voice.stop(); } catch (_) { } }
@@ -89,7 +90,7 @@ var RunnerMusic = (() => {
             voices.add(voice); voice.start(when); voice.stop(when + Math.max(.025, n.duration) + .01);
         }
         function schedule() {
-            if (!song || !enabled || !running || context.state !== 'running') return;
+            if (!song || !enabled || muted || !running || context.state !== 'running') return;
             if (index === song.notes.length) {
                 if (context.currentTime < origin + song.duration) return;
                 if (boss) { index = 0; origin += song.duration; }
@@ -108,7 +109,7 @@ var RunnerMusic = (() => {
             }
         }
         async function sync() {
-            if (!enabled || !running) { if (context) await context.suspend(); return; }
+            if (!enabled || muted || !running) { if (context) await context.suspend(); return; }
             if (!context) {
                 const Audio = window.AudioContext || window.webkitAudioContext;
                 context = new Audio(); master = context.createGain(); master.gain.value = .35; master.connect(context.destination);
@@ -153,6 +154,17 @@ var RunnerMusic = (() => {
         label();
         return {
             toggle,
+            restart() {
+                generation++; silence(); song = null; activePath = ''; positions.clear();
+                boss = false; select.value = playlist[0];
+            },
+            next() {
+                if (boss) return;
+                select.value = playlist[(playlist.indexOf(select.value) + 1) % playlist.length];
+                positions.delete(select.value);
+                if (context) return load();
+            },
+            setMuted(value) { muted = value; return sync().catch(() => { enabled = false; label(); }); },
             setRunning(value) { running = value; sync().catch(() => { enabled = false; label(); }); },
             setBoss(value) {
                 if (boss === value) return;
