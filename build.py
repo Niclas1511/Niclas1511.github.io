@@ -20,7 +20,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent
 PAGES_DIR = ROOT / "pages"
-NAV = [("index.html", "Home"), ("notes.html", "Notes & Theses"), ("teaching.html", "Teaching"), ("cv.html", "CV")]
+NAV = [("index.html", "Home"), ("notes.html", "Notes & Theses"), ("teaching.html", "Teaching"), ("cv.html", "CV"), ("memory.html", "Memory"), ("runner.html", "Math Run")]
 
 
 def download_note() -> None:
@@ -101,6 +101,8 @@ def monomial_lattice() -> str:
 
 
 def render_sections(body: str, stem: str) -> str:
+    if stem in {"memory", "runner"}:
+        return body
     chunks = re.split(r"<h2>(.*?)</h2>", body, flags=re.S)
     sections = []
     if chunks[0].strip():
@@ -168,6 +170,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
                     <span>GitHub</span>
                 </a>
             </div>''' if stem == "index" else ""
+    eyebrow = f'<p class="eyebrow">{subtitle}</p>' if subtitle else ""
     hero_description = f'<p class="hero-description">{intro}</p>' if intro else ""
     scholarly_metadata = ""
     if stem == "masters-thesis":
@@ -180,6 +183,23 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     <meta name="citation_dissertation_institution" content="Otto-von-Guericke-Universität Magdeburg">
     <meta name="citation_pdf_url" content="https://niederdrenk.de/documents/2025-Niederdrenk-Gemischte-Binomkantenideale.pdf">
     <meta name="citation_language" content="de">'''
+    memory_assets = ''
+    if stem == "memory":
+        memory_version = sha256((ROOT / "memory.js").read_bytes()).hexdigest()[:12]
+        memory_css_version = sha256((ROOT / "memory.css").read_bytes()).hexdigest()[:12]
+        memory_assets = ('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css" '
+                         'integrity="sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp" crossorigin="anonymous">'
+                         '<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" '
+                         'integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous"></script>'
+                         f'<link rel="stylesheet" href="memory.css?v={memory_css_version}">'
+                         f'<script src="memory.js?v={memory_version}" defer></script>')
+    if stem == "runner":
+        memory_assets = "\n".join(
+            f'<link rel="stylesheet" href="runner.css?v={sha256((ROOT / "runner.css").read_bytes()).hexdigest()[:12]}">'
+            if asset == "runner.css" else
+            f'<script defer src="{asset}?v={sha256((ROOT / asset).read_bytes()).hexdigest()[:12]}"></script>'
+            for asset in ("runner.css", "runner-engine.js", "runner.js")
+        )
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -188,6 +208,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     <title>{title}</title>{scholarly_metadata}
     <script src="{prefix}theme.js?v={theme_version}"></script>
     <link rel="stylesheet" href="{prefix}style.css?v={css_version}">
+{memory_assets}
 </head>
 <body class="page-{escape(stem)}">
 <a class="skip-link" href="#content">Skip to content</a>
@@ -198,11 +219,11 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
     </nav>
     <header class="hero">
         <div class="hero-copy">
-            <p class="eyebrow">{subtitle}</p>
+{('            ' + eyebrow) if eyebrow else ''}
             <h1>{title_html}</h1>
 {hero_description}{hero_contact}
         </div>
-        {hero_figure}
+{('        ' + hero_figure) if hero_figure else ''}
     </header>
     <main id="content" class="content-grid">
 {render_sections(body, stem)}

@@ -1,0 +1,38 @@
+.page-runner .hero { grid-template-columns: 1fr; padding-bottom: 28px; }
+.page-runner #content { display: block; }
+.runner-toolbar, .runner-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.runner-toolbar { margin-bottom: 16px; }
+.runner-scores { display: flex; gap: 24px; font-size: 14px; color: var(--muted); }
+.runner-scores strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.page-runner main button { padding: 9px 18px; border: 1px solid var(--line); background: var(--background); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; border-radius: 0; }
+.page-runner main button:disabled { opacity: .45; cursor: default; }
+.runner-stage { position: relative; background: #172431; border: 3px solid var(--ink); }
+#runner-canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.runner-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; background: #172431d9; color: #e9efdb; text-align: center; padding: 16px; font-family: Consolas, monospace; }
+.runner-overlay[hidden] { display: none; }
+.runner-overlay p { margin: 0; font-size: clamp(16px, 3vw, 24px); }
+.runner-overlay #runner-start { background: #c9e59b; color: #172431; border-color: #c9e59b; font-family: inherit; }
+.runner-actions { margin-top: 16px; }
+.runner-actions p { margin: 0; font-size: 13px; color: var(--muted); }
+.runner-touch { display: flex; gap: 10px; }
+.runner-hint { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.runner-scores { flex-wrap: wrap; gap: 8px 20px; }
+.runner-touch button { touch-action: none; user-select: none; -webkit-user-select: none; min-height: 48px; }
+.runner-touch button:active { background: var(--panel); }
+.runner-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.runner-effects { margin: 0 0 12px; font: 13px Consolas, monospace; color: var(--blue); }
+.runner-effects[hidden] { display: none; }
+
+.runner-event { margin: 0 0 12px; font: 14px Consolas, monospace; color: var(--ink); padding-left: 10px; border-left: 3px solid var(--blue); }
+.runner-event[hidden] { display: none; }
+
+.runner-help { margin-top: 14px; font-size: 13px; color: var(--muted); max-width: 80ch; }
+.runner-help summary { cursor: pointer; color: var(--ink); }
+.runner-help summary:focus-visible { outline: 3px solid #c99920; outline-offset: 4px; }
+.runner-help p { margin: 10px 0 0; }
+
+.runner-arena-controls[hidden] { display: none; }
+#runner-canvas[data-arena="true"] { cursor: crosshair; touch-action: none; }
+.runner-arena-controls button { min-width: 86px; }
+.runner-touch { flex-wrap: wrap; }
