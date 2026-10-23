@@ -687,6 +687,12 @@
         showOverlay('Paused', 'Resume');
         draw();
     }
+    // Audio controls must hand keyboard control back to the active game.
+    for (const selector of ['#runner-sound', '#runner-music']) {
+        document.querySelector(selector).addEventListener('click', () => {
+            if (mode === 'running' || mode === 'paused') canvas.focus({ preventScroll: true });
+        });
+    }
     startButton.addEventListener('click', run);
     pauseButton.addEventListener('click', () => mode === 'paused' ? run() : pause());
     jumpButton.addEventListener('pointerdown', event => {

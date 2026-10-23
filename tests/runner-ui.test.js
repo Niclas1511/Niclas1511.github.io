@@ -12,7 +12,7 @@ MathRunner.throwChalk=state=>{throwCalls++;return originalThrow(state);};
 function assert(value,message){if(!value)throw Error(message);}
 function element(){return {events:{},textContent:'',disabled:false,hidden:false,attrs:{},
  addEventListener(type,fn){(this.events[type] ||= []).push(fn)},
- setAttribute(name,value){this.attrs[name]=value},focus(){},setPointerCapture(){},
+ setAttribute(name,value){this.attrs[name]=value},focus(){document.activeElement=this;},setPointerCapture(){},
  fire(type,event={}){for(const fn of this.events[type] || [])fn(event)}};}
 const elements={};
 const canvas=elements['#runner-canvas']=element();canvas.width=960;canvas.height=320;
@@ -205,4 +205,14 @@ currentState.bossIntro.age=1.2;advance(renderTime+=17);
 assert(drawnText.includes('REVISE. RESUBMIT. SURVIVE.'),'impact changes cinematic subtitle');
 for(let i=0;i<90;i++)advance(renderTime+=17);
 assert(!currentState.bossIntro&&!elements['#runner-jump'].disabled,'cinematic restores gameplay controls');
+for(const selector of ['#runner-sound','#runner-music']) {
+ const button=elements[selector];button.focus();button.fire('click',{detail:1});
+ assert(document.activeElement===canvas,'audio toggle returns focus to game');
+ const before=throwCalls;document.fire('keydown',{...key('KeyX'),target:document.activeElement});
+ assert(throwCalls===before+1 && callbacks.size===1,'keyboard chalk works immediately after audio toggle');
+ window.fire('blur');button.focus();button.fire('click',{detail:0});
+ assert(document.activeElement===canvas,'keyboard activation also returns focus while paused');
+ document.fire('keydown',{...key('KeyP'),target:document.activeElement});
+ assert(elements['#runner-overlay'].hidden,'P resumes after toggling audio during pause');
+}
 print('Passed: initial render, responsive sizing, start, pause/resume, blur, touch release, game over, score persistence fallback and restart.');
