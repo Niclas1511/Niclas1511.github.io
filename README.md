@@ -305,3 +305,8 @@ special chalk, finite-ammo victory, rotation and animation cleanup.
 Upper route rewards arrive 0.35 seconds before the ground token, allowing a
 well-timed double jump and fast fall to collect both. The route ID is only a
 layout marker; it never removes the uncollected item.
+
+Boss training is available below the canvas: choose any of the four bosses to
+start with five hearts. Training ends on victory and offers a retry; scores are
+excluded from both the personal best and local leaderboard. Return to the full
+semester via the training panel. Existing `?boss=` practice links remain supported.

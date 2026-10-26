@@ -44,7 +44,19 @@ if(practiceBoss){
   assert(currentState.boss?.type===practiceBoss&&currentState.bossIntro,'practice enters selected boss immediately');
   assert(currentState.lives===5&&currentState.runTime<1,'practice starts with five lives without waiting');
  }else assert(!currentState.boss&&currentState.lives===1,'invalid practice value uses normal game');
- if(practiceBoss!=='invalid'){currentState.over=true;advance(35);assert(!namedOffers.length,'practice cannot submit named scores');}
+ if(practiceBoss!=='invalid'){
+  assert(elements['#runner-phase'].textContent.includes('training'),'training is clearly labelled');
+  currentState.over=true;advance(35);assert(!namedOffers.length,'practice cannot submit named scores');
+  elements['#runner-start'].fire('click');advance(50);advance(67);
+  assert(currentState.boss?.type===practiceBoss&&currentState.lives===5,'retry resets the selected boss and hearts');
+  const originalStep=MathRunner.step;
+  MathRunner.step=state=>{state.boss=null;};advance(84);MathRunner.step=originalStep;
+  assert(elements['#runner-overlay'].hidden===false&&elements['#runner-message'].textContent.includes('Boss defeated'),'victory ends training with a result');
+  assert(!callbacks.size&&!musicRunning&&elements['#runner-pause'].disabled,'victory stops the loop, music and pause control');
+  assert(!namedOffers.length,'training victory never offers a score');
+  elements['#runner-start'].fire('click');advance(101);advance(118);
+  assert(currentState.boss?.type===practiceBoss&&currentState.lives===5,'victory retry starts a fresh selected arena');
+ }
  print('Passed boss practice: '+practiceBoss);imports.system.exit(0);
 }
 assert(draws>0,'initial pixel scene draws');assert(canvas.width===440,'responsive world width');

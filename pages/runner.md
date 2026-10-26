@@ -31,11 +31,22 @@ lang: en
     <div id="runner-touch-controls" class="runner-touch-controls" data-arena="false">
         <div class="runner-direction-controls">
             <div id="runner-arena-controls" class="runner-touch runner-arena-controls" hidden><button id="runner-left" type="button" disabled aria-label="Move left">←</button><button id="runner-right" type="button" disabled aria-label="Move right">→</button></div>
-            <button id="runner-duck" type="button" disabled aria-label="Hold to duck or fall faster">↓<span>Duck</span></button>
+            <button id="runner-jump" type="button" disabled aria-label="Hold to jump higher; press twice to double jump">↑<span>Jump</span></button>
         </div>
-        <div class="runner-touch runner-primary-controls"><button id="runner-jump" type="button" disabled aria-label="Hold to jump higher; press twice to double jump">↑<span>Jump</span></button><button id="runner-chalk" type="button" disabled aria-label="Hold to throw chalk repeatedly">✦<span>Chalk</span></button></div>
+        <div class="runner-touch runner-primary-controls"><button id="runner-duck" type="button" disabled aria-label="Hold to duck or fall faster">↓<span>Duck</span></button><button id="runner-chalk" type="button" disabled aria-label="Hold to throw chalk repeatedly">✦<span>Chalk</span></button></div>
     </div>
 </div>
+<details class="runner-training">
+    <summary>Boss training · choose your challenge</summary>
+    <p>Start directly in an arena with five hearts. Practice rounds end after the boss and do not save scores.</p>
+    <nav aria-label="Choose a boss to practice">
+        <a href="runner.html?boss=reviewer">Reviewer 2 <span>Move, jump and aim your chalk.</span></a>
+        <a href="runner.html?boss=blackboard">The Blackboard <span>Dodge graphs; hit the exposed eraser.</span></a>
+        <a href="runner.html?boss=printer">The Printer <span>Duck sheets; hit the feed, then jump.</span></a>
+        <a href="runner.html?boss=deadline">The Deadline <span>Jump the minute hand; duck the hour hand.</span></a>
+    </nav>
+    <a href="runner.html">Back to a full semester run →</a>
+</details>
 <div class="runner-music">
     <button id="runner-mute" type="button" aria-pressed="false">Mute · M</button>
     <button id="runner-sound" type="button" aria-pressed="true">Sound: on</button>

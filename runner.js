@@ -476,7 +476,7 @@
         effectsDisplay.textContent = effects.join(' · ');
         effectsDisplay.hidden = effects.length === 0;
         comboDisplay.textContent = `×${state.multiplier}${state.streak ? ` · ${state.streak} hits` : ''}`;
-        phaseDisplay.textContent = MathRunner.phases[state.phase].label;
+        phaseDisplay.textContent = bossTest ? 'Boss training · no highscore' : MathRunner.phases[state.phase].label;
         const intro = Boolean(state.bossIntro);
         if (intro !== previousIntro) { clearInputs(); previousIntro = intro; setControls(mode === 'running' && !intro); }
         const arena = Boolean(state.boss);
@@ -887,8 +887,18 @@
         showOverlay(`Semester over. Score ${state.score}.`, 'Try again');
         if (!bossTest) namedScores?.offer(state.score);
     }
+    function finishPractice() {
+        mode = 'over';
+        music?.setRunning(false);
+        clearInputs();
+        setControls(false);
+        pauseButton.disabled = true;
+        showOverlay('Boss defeated! Ready for another attempt?', 'Practice again');
+        status.textContent = 'Boss defeated! Choose another boss below the game or practice again. Training scores are not saved.';
+    }
     function tick(time) {
         if (mode !== 'running') return;
+        const fightingBoss = Boolean(state.boss);
         if (lastTime) MathRunner.step(state, (time - lastTime) / 1000);
         lastTime = time;
         if (chalkInputs.size && !state.over && !state.bossIntro && state.cooldown <= 0 &&
@@ -897,6 +907,7 @@
         updateHud();
         draw();
         if (state.over) finish();
+        else if (bossTest && fightingBoss && !state.boss) finishPractice();
         else frame = requestAnimationFrame(tick);
     }
     function run() {
