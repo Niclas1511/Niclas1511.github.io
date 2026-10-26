@@ -33,12 +33,13 @@ All page content lives in Markdown files:
   Standing throws work; the speech bubble does not require a precision hit. Fixed obstacle speeds
   and scheduled arrival times prevent faster flyers from catching earlier hazards.
   Every fourth encounter, starting with the third, is a collectible instead of a
-  hazard at ground level, plus a riskier upper reward with a trailing obstacle.
+  a safe +10-point token at ground level or a higher heart/power-up with a trailing
+  obstacle. Both rewards remain independently collectible; taking one leaves the other visible.
   Walk through an outlined icon: unlimited chalk lasts 10 seconds, triple
   throw lasts 10 seconds (one ammo per volley), and the animated shield lasts six
   seconds. The Student assistant (figure icon) stays until its five lives are spent and clears
   five hazards across all lanes, jumping into their path and recoiling with stars and an “Ouch!” on each hit.
-  Each pickup hires an additional helper with an five independent lives.
+  Each pickup hires an additional helper with five independent lives.
   Helpers run in formation and reserve different targets. They remain active in boss arenas and intercept enemy shots at one life per hit. Their hits do not increase the chalk combo.
   Homing chalk (H) lasts 10 seconds: normal projectiles arc toward visible hazards
   or the boss before accelerating into a bright pixel impact, retarget cleared hazards, and retain normal ammo and combo rules.
@@ -55,7 +56,7 @@ All page content lives in Markdown files:
   Office hours and Inbox overflow have two-second warnings and run for eight seconds.
   Every 60 seconds of running, after existing hazards clear, a boss starts an
   arena fight. Scrolling, distance score, normal spawns, and the semester clock stop.
-  Arena controls are Left/Right to move, Space to jump, and X to throw. A/D and
+  Arena controls are Left/Right to move, Space to jump, Down to duck/fast fall, and X to throw. A/D and
   Up remain optional aliases. Chalk flies horizontally in the last movement direction;
   jumping sets throw height. The boss moves for 0.85 seconds then holds a position
   for 2.35 seconds, creating jump-throw openings. Only Homing chalk steers at targets.
@@ -208,7 +209,7 @@ into/out of boss arenas; only zero hearts ends the game. Restart resets health.
 `gjs tests/runner-hearts.test.js` checks health, collection, recovery, shields,
 cinematic freezes and boss projectiles at 30/60/120 FPS.
 
-Reviewer 2 and The Blackboard alternate between boss encounters. Blackboard draws
+Reviewer 2 → The Blackboard → The Printer → The Deadline rotate between boss encounters. Blackboard draws
 for 1.2 seconds, then launches a bouncing parabola or low sine-wave projectile
 and exposes its eraser for 3.6 seconds. The board panel stays armored; only the
 eraser takes damage (8 HP, 3 damage from Hagoromo). Homing targets the exposed
@@ -218,7 +219,7 @@ armor, weak points, attack paths, power-ups, victories and single-life dodge rou
 The two Italian Concerto MIDIs are unmodified CC BY-SA 3.0 Mutopia files with
 credits/license links in the game's help and `assets/music/README.md`.
 
-Each new run starts with Liebestraum No. 3 from the beginning. N or Next skips
+Each new run starts with a uniformly random classical track from the MIDI collection, from the beginning. The boss theme is excluded from this selection. N or Next skips
 to the next classical track without changing mute/pause settings. Boss themes
 cannot be skipped. Pausing/resuming preserves the current track and position.
 
@@ -227,3 +228,80 @@ intervals of 24–34 seconds. It appears on the side farther from the player, at
 y=58–76, requiring a double jump, and expires after 6.5 seconds. It stays fixed
 in the arena, obeys pause/cinematic freezes, and disappears on victory. All five
 power-up types can appear; no extra notification tone is played.
+
+Blackboard changes between y=100/156/72/128 during drawing, with smooth vertical
+travel and stable exposed-eraser windows. Printer has a duckable sheet at y=211,
+a temporary exposed feed, and a jumpable paper-jam wave. A feed hit advances the
+jam to 0.65 seconds after impact, making each attack require a follow-up dodge.
+The third arena is Printer, followed by Deadline and then Reviewer 2 again. `gjs tests/runner-printer.test.js`
+checks armor/feed windows, duck/jump routes, special chalk and finite-ammo wins.
+Tor₁ was replaced with Gal(K/F) in the obstacle pool.
+
+Mobile controls use a left-hand movement/duck pad and large right-hand Jump/Chalk
+buttons below the canvas, with audio controls placed afterward. On coarse-pointer
+screens the action bar sticks to the bottom while scrolling, with safe-area padding.
+Hold Chalk to repeat throws at the normal cooldown/ammo rate; pointer release,
+cancellation, lost capture, pause and scene transitions stop held actions.
+
+Direct boss practice URLs: `runner.html?boss=reviewer`, `?boss=blackboard`, or
+`?boss=printer`, plus `?boss=deadline`. Press Start to enter the chosen arena immediately, with five
+hearts and the usual introduction. Practice scores never update the saved best.
+Invalid boss names use the regular game. To verify URL handling, run
+`RUNNER_TEST_BOSS=printer gjs tests/runner-ui.test.js` (also reviewer/blackboard/invalid).
+
+Runner challenge progression: from 12 seconds onward, curated duck/jump groups
+occasionally replace a single hazard. Exam season uses denser three-step groups;
+The last 20 seconds before each boss increase sequence frequency; the last 10 use
+three-step groups, 1.25-second recovery spacing and two-hit endings. Pressure
+resets after victory, preserves email recovery gaps, and never raises run speed
+beyond its existing cap. A quiet canvas meter shows the approach.
+Deadline night launches 1.35×-speed email groups with a 3.4-second recovery gap
+after the last scheduled step. Group members keep the same speed, and the
+arrival reservation includes the final member, preventing later spawns catching up.
+Proof tiles have two HP and Reviewer Reports have three, shown as pips. Normal
+chalk removes one HP; every damaging volley counts toward combo progress.
+Hagoromo, shields and assistants still clear a whole obstacle in one encounter.
+Reward pairs offer 10 points below or a double-jump-height reward above,
+with upper hearts alternating with power-ups. The original standalone healing
+heart encounters remain available. `gjs tests/runner-challenges.test.js` verifies
+real scheduler groups, one-life routes at multiple speeds/frame rates, armor,
+special clears, and independent reward collection/physical reachability.
+
+Optional named leaderboard: `runner-scores.js` stores the local top 10 under
+`niederdrenk-math-run-scores-v1`. After a normal Game Over, Save score accepts a
+name (20 characters maximum); Skip and starting again store nothing. Names are
+compared case-insensitively and only a higher personal score replaces an entry.
+Scores include a date, are rendered as text, and never leave the browser. Practice
+mode cannot submit scores. Storage errors are reported without interrupting play.
+`gjs tests/runner-scores.test.js` covers persistence, validation, optional saving,
+ranking, Unicode, safe rendering and unavailable storage.
+
+Espresso jump: the harmless coffee-cup pickup grants a third jump for 10 seconds,
+with steam pixels above the player, a third remaining-jump pip, and its own jump
+cue. Works in both runner and boss arenas. Repeat pickups refresh time but never
+reset the used-jump counter; mid-air expiry prevents further extra jumps until
+landing. The old coffee obstacle is now an 8 AM alarm clock. Upper reward branches
+advance the power-up cycle only when they offer an effect rather than a heart,
+so all six power-up types (including Espresso) remain reachable in the rotation.
+`gjs tests/runner-espresso.test.js` covers these rules.
+
+Espresso animation adds a brief caffeine shiver, a hopping/winking cup with a
+“ZIP!” caption on pickup, and stretch/steam jets with a “PFFT!” cloud on the
+third jump. These visuals do not alter collision boxes. Their timers freeze
+on pause and boss introductions, and reduced-motion mode removes shivering,
+stretching and travelling clouds. Puff count and lifetime are bounded.
+
+The Deadline is the fourth arena boss (10 HP). Its inner clock face takes chalk
+hits; each hit refreshes 0.8 seconds of 0.45× mechanism/projectile speed without
+stacking the duration. Minute hands run along the floor, hour hands cross at head
+height, with at least 0.9 clock seconds of visual warning. It aims left or right
+toward the player. At 3 HP its hand speed rises from 170 to 220 and attack intervals
+fall from 2.8 to 1.7 seconds. Animated gears, clock hands, pendulum, color changes,
+and a one-second gear-shatter finale use the existing pixel renderer. Reduced
+motion removes decorative wobble/rotation. Practice: `runner.html?boss=deadline`.
+`gjs tests/runner-deadline.test.js` covers slow timing, both dodge routes, panic,
+special chalk, finite-ammo victory, rotation and animation cleanup.
+
+Upper route rewards arrive 0.35 seconds before the ground token, allowing a
+well-timed double jump and fast fall to collect both. The route ID is only a
+layout marker; it never removes the uncollected item.

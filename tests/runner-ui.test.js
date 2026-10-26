@@ -23,6 +23,8 @@ canvas.getContext=()=>({fillRect(){draws++},fillText(text){drawnText.push(text);
 const document=element();document.body=element();
 document.querySelector=selector=>elements[selector] ||= element();
 const window=element();
+const practiceBoss=GLib.getenv('RUNNER_TEST_BOSS');
+if(practiceBoss)window.location={search:'?boss='+practiceBoss};
 // Storage denial must not prevent play.
 const localStorage={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};
 let nextFrame=0;const callbacks=new Map();
@@ -30,10 +32,21 @@ function requestAnimationFrame(fn){callbacks.set(++nextFrame,fn);return nextFram
 function cancelAnimationFrame(id){callbacks.delete(id);}
 function advance(time){const entries=[...callbacks];callbacks.clear();for(const [,fn] of entries)fn(time);}
 let musicSkips=0, musicRestarts=0, musicMutes=0, musicBoss=false, musicRunning=false, soundMuted=false, soundUnlocked=0, soundStops=0;
+const namedOffers=[];let namedDismissals=0;
+const RunnerScores={create(){return {offer(score){namedOffers.push(score);},dismiss(){namedDismissals++;}};}};
 const playedSounds=[];
 const RunnerSound={create(){return {setMuted(value){soundMuted=value;},unlock(){soundUnlocked++;return Promise.resolve();},play(cue){playedSounds.push(cue);},stop(){soundStops++;},drain(state){playedSounds.push(...state.sounds.splice(0));}};}};
 const RunnerMusic={create(button,select,status){assert(button && select && status,'music controls connected');return {next(){musicSkips++;},restart(){musicRestarts++;},setMuted(value){musicMutes++;this.muted=value;},setBoss(value){musicBoss=value;},setRunning(value){musicRunning=value;}};}};
 eval(read('runner.js'));
+if(practiceBoss){
+ elements['#runner-start'].fire('click');advance(1);advance(18);
+ if(['reviewer','blackboard','printer','deadline'].includes(practiceBoss)){
+  assert(currentState.boss?.type===practiceBoss&&currentState.bossIntro,'practice enters selected boss immediately');
+  assert(currentState.lives===5&&currentState.runTime<1,'practice starts with five lives without waiting');
+ }else assert(!currentState.boss&&currentState.lives===1,'invalid practice value uses normal game');
+ if(practiceBoss!=='invalid'){currentState.over=true;advance(35);assert(!namedOffers.length,'practice cannot submit named scores');}
+ print('Passed boss practice: '+practiceBoss);imports.system.exit(0);
+}
 assert(draws>0,'initial pixel scene draws');assert(canvas.width===440,'responsive world width');
 assert(!callbacks.size,'ready screen does not animate');
 document.fire('keydown',{code:'KeyM',target:canvas,repeat:false,preventDefault(){}});
@@ -47,7 +60,7 @@ assert(elements['#runner-overlay'].hidden,'Space starts the game without a mouse
 assert(!pause.disabled && callbacks.size===1,'starts exactly one loop');
 assert(musicRunning,'starting game starts enabled music');
 assert(soundUnlocked===1,'start gesture unlocks sound effects');
-assert(musicRestarts===1,'new run starts playlist from Liebestraum');
+assert(musicRestarts===1,'new run chooses a fresh starting track');
 document.fire('keydown',{code:'KeyN',target:canvas,repeat:false,preventDefault(){}});
 document.fire('keydown',{code:'KeyN',target:canvas,repeat:true,preventDefault(){}});
 assert(musicSkips===1,'N skips once per press');
@@ -107,7 +120,7 @@ advance(renderTime+=17);
 assert(elements['#runner-chalk-count'].textContent==='∞' && elements['#runner-chalk-capacity'].hidden,'unlimited ammo display');
 assert(!elements['#runner-chalk'].disabled,'unlimited chalk enables button at zero normal ammo');
 for(const type of MathRunner.powerupTypes)assert(elements['#runner-effects'].textContent.includes(type.label),'active effect countdown displayed');
-assert(!elements['#runner-effects'].hidden && elements['#runner-status'].textContent.includes('Homing chalk'),'pickup announcement');
+assert(!elements['#runner-effects'].hidden && elements['#runner-status'].textContent.includes('Espresso jump'),'pickup announcement');
 assert(!drawnText.includes('SA'),'assistant uses figure icon without initials');
 currentState.assistants[0].hurt=.5;advance(renderTime+=17);
 assert(drawnText.includes('*'),'hurt assistant shows orbiting stars');
@@ -158,8 +171,10 @@ document.fire('keyup',{code:'KeyD'});assert(currentState.move===0,'keyup stops w
 const left=elements['#runner-left'];left.fire('pointerdown',{pointerId:92,preventDefault(){}});
 assert(currentState.move===-1,'touch left button moves left');
 left.fire('pointercancel',{pointerId:92});assert(currentState.move===0,'touch cancellation releases movement');
-assert(elements['#runner-controls-hint'].textContent==='Boss: ← / → move · Space jump · X throw · Jump to aim · M mute · N next track','arena advertises only four gameplay keys');
-assert(elements['#runner-duck'].hidden,'extra duck action hidden during boss fight');
+assert(elements['#runner-controls-hint'].textContent==='Boss: ← / → move · Space jump · ↓ duck / fast fall · X throw · Jump to aim · M mute · N next track','arena advertises movement, jump, duck and throw');
+assert(!elements['#runner-duck'].hidden&&!elements['#runner-duck'].disabled,'duck remains available in boss fight');
+document.fire('keydown',key('ArrowDown'));assert(currentState.duck,'Down ducks in boss mode');
+document.fire('keyup',{code:'ArrowDown'});assert(!currentState.duck,'release restores standing');
 const throwsBeforePointer=throwCalls, automaticTarget=currentState.aim;
 canvas.fire('pointermove',{clientX:140,clientY:65});
 canvas.fire('pointerdown',{clientX:140,clientY:65,button:0,pointerType:'mouse',preventDefault(){}});
@@ -231,4 +246,38 @@ assert(drawnText.includes('THE BLACKBOARD')&&drawnText.includes('The graphs are 
 currentState.bossIntro=null;currentState.boss.cycle=1.3;advance(renderTime+=17);
 assert(drawnText.includes('HIT THE ERASER')&&elements['#runner-event'].textContent.includes('The Blackboard'),'board and weak point use correct UI');
 assert(drawnText.includes('x²'),'parabola graph renders as math');
+currentState.boss={kind:'boss',type:'printer',name:'The Printer',x:280,y:166,w:124,h:80,hp:8,maxHp:8,age:0,cycle:1.3,pattern:0,jamAt:3.6,sheetsFired:true,jammed:false};
+currentState.bossIntro=null;currentState.enemyShots=[];currentState.items=[];currentState.powerups.shield=100;advance(renderTime+=17);
+assert(drawnText.includes('THE PRINTER')&&drawnText.includes('FEED OPEN'),'Printer renders its open feed');
+elements['#runner-duck'].fire('pointerdown',{pointerId:71,preventDefault(){}});
+assert(currentState.duck,'touch duck works in arena');
+elements['#runner-left'].fire('pointerdown',{pointerId:72,preventDefault(){}});
+assert(currentState.move===-1&&currentState.duck,'moving and ducking can be held with separate touches');
+elements['#runner-duck'].fire('pointercancel',{pointerId:71});elements['#runner-left'].fire('pointerup',{pointerId:72});
+assert(!currentState.duck&&!currentState.move,'cancel/release clear mobile direction inputs');
+currentState.boss=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];currentState.powerups.infinite=0;currentState.hagoromo=0;advance(renderTime+=17);currentState.chalk=3;currentState.cooldown=0;
+elements['#runner-chalk'].fire('pointerdown',{pointerId:73,preventDefault(){}});
+for(let i=0;i<44;i++)advance(renderTime+=17);
+assert(currentState.chalk===0,'holding Chalk fires repeated volleys using normal ammo');
+elements['#runner-chalk'].fire('lostpointercapture',{pointerId:73});const afterRelease=throwCalls;
+for(let i=0;i<25;i++)advance(renderTime+=17);
+assert(throwCalls===afterRelease,'lost capture stops repeated mobile throws');
+assert(namedOffers.length>0&&namedDismissals>0,'game over offers named score and new runs dismiss it');
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.enemyShots=[];currentState.obstacles=[{x:260,y:192,w:62,h:28,band:1,variant:0,hp:2,maxHp:3,armor:'report',speed:1}];
+currentState.items=[{x:180,y:220,w:28,h:28,kind:'points',points:10,route:22,speed:1},{x:180,y:86,w:28,h:28,kind:'heart',route:22,risky:true,speed:1}];advance(renderTime+=17);
+assert(drawnText.includes('REPORT')&&drawnText.includes('SAFE +10')&&drawnText.includes('HIGH REWARD'),'armored tiles and exclusive route labels render');
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];
+currentState.x=76;currentState.y=252;currentState.vy=0;currentState.duck=false;currentState.jumps=0;
+currentState.items=[{kind:'espresso',x:78,y:220,w:28,h:28,speed:0}];advance(renderTime+=17);
+assert(currentState.espressoSip>0&&drawnText.includes('ZIP!'),'coffee pickup animates its smiling cup');
+MathRunner.jump(currentState);MathRunner.jump(currentState);MathRunner.jump(currentState);advance(renderTime+=17);
+assert(drawnText.includes('PFFT!')&&currentState.espressoPuffs.length,'third jump renders funny steam cloud');
+window.fire('blur');const puffAge=currentState.espressoPuffs[0].age;advance(renderTime+=1000);
+assert(currentState.espressoPuffs[0].age===puffAge,'pause freezes funny coffee animation');
+start.fire('click');currentState.boss={kind:'boss',type:'deadline',name:'The Deadline',x:260,y:94,w:104,h:104,hp:3,maxHp:10,age:0,slow:.5,hitFlash:0,handAngle:1,attackIn:.5,pattern:0};
+currentState.bossIntro=null;currentState.obstacles=[];currentState.enemyShots=[];advance(renderTime+=17);
+assert(drawnText.includes('THE DEADLINE')&&drawnText.includes('TIME OUT…'),'clock boss and slowdown render');
+currentState.boss.slow=0;advance(renderTime+=17);assert(drawnText.includes('TICK! TOCK!'),'panic animation uses unique caption');
+currentState.deadlineShatter={x:300,y:145,age:0};advance(renderTime+=17);
+assert(drawnText.includes('DEADLINE EXTENDED!'),'victory shatter renders gears and caption');
 print('Passed: initial render, responsive sizing, start, pause/resume, blur, touch release, game over, score persistence fallback and restart.');

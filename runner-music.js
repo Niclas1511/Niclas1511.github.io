@@ -62,11 +62,12 @@ var RunnerMusic = (() => {
         if (!notes.length) throw Error('Empty MIDI');
         return { notes, duration: Math.max(duration, ...notes.map(n => n.time + n.duration)) + .4 };
     }
-    function create(button, select, status) {
+    function create(button, select, status, random = Math.random) {
         let context, master, song, timer, origin = 0, index = 0, generation = 0;
         let enabled = true, muted = false, running = false, boss = false, activePath = '';
         const playlist = ['assets/music/liszt-liebestraum-no-3.mid', 'assets/music/mozart-rondo-alla-turca.mid', 'assets/music/bach-prelude-c-major.mid', 'assets/music/bach-italian-concerto-1.mid', 'assets/music/bach-italian-concerto-2.mid'];
-        select.value = playlist[0];
+        const randomTrack = rng => playlist[Math.min(playlist.length - 1, Math.floor(rng() * playlist.length))];
+        select.value = randomTrack(random);
         const bossPath = 'assets/music/reviewer-2-boss.mid';
         const positions = new Map();
         const voices = new Set(), cache = new Map();
@@ -154,9 +155,9 @@ var RunnerMusic = (() => {
         label();
         return {
             toggle,
-            restart() {
+            restart(rng = random) {
                 generation++; silence(); song = null; activePath = ''; positions.clear();
-                boss = false; select.value = playlist[0];
+                boss = false; select.value = randomTrack(rng);
             },
             next() {
                 if (boss) return;

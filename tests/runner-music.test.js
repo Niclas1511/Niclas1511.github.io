@@ -37,12 +37,12 @@ async function playback(){
  const button=element(), select=element('assets/music/mozart-rondo-alla-turca.mid'), status=element();
  const requests=[];
  const player=new Function('window','fetch','setInterval','clearInterval',new TextDecoder().decode(code)+';return RunnerMusic;')({AudioContext:AudioMock}, async path=>{requests.push(path);return globalThis.fetch(path);}, callback=>{intervals.set(++nextTimer,callback);return nextTimer;}, id=>intervals.delete(id));
- const controller=player.create(button,select,status);
+ const controller=player.create(button,select,status,()=>0);
  const flush=async()=>{for(let i=0;i<14;i++)await Promise.resolve();};
  assert(!contexts.length && !fetches && button.attributes['aria-pressed']==='true','music defaults on but website stays silent');
  controller.setRunning(true);await flush();
  const context=contexts[0];
- assert(requests[0].endsWith('liszt-liebestraum-no-3.mid'),'Liebestraum is always first');
+ assert(requests[0].endsWith('liszt-liebestraum-no-3.mid'),'seeded random selection chooses first classical track');
  assert(context.state==='running' && context.voices.length>0 && fetches===1,'Start automatically plays game music');
  assert(context.voices.every(v=>['square','triangle'].includes(v.type)),'8-bit oscillator timbres');
  controller.setRunning(false);await flush();assert(context.state==='suspended','pause freezes music');
@@ -84,7 +84,11 @@ async function playback(){
  controller.setRunning(false);await flush();assert(context.state==='suspended','game over silences music');
  await controller.toggle();await controller.toggle();assert(context.state==='suspended','music button cannot play website background music');
  await controller.next();assert(select.value.endsWith('mozart-rondo-alla-turca.mid'),'manual skip advances playlist');
- controller.restart();assert(select.value.endsWith('liszt-liebestraum-no-3.mid'),'new run resets playlist to Liebestraum');
+ for(const [i,name] of ['liszt-liebestraum-no-3.mid','mozart-rondo-alla-turca.mid','bach-prelude-c-major.mid','bach-italian-concerto-1.mid','bach-italian-concerto-2.mid'].entries()) {
+  controller.restart(()=> (i+.5)/5);
+  assert(select.value.endsWith(name),'random start can select '+name);
+ }
+ controller.restart(()=>0);
  controller.setRunning(true);await flush();
  assert(context.state==='running','new run still starts music');
  globalThis.fetch=async()=>({ok:false});select.value='missing.mid';select.listeners.change();await flush();

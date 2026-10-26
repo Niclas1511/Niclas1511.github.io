@@ -58,7 +58,7 @@ for(const [time,expected] of [[9,'student'],[81,'email']]){
  s=create();s.time=time;s.spawnIn=0;game.step(s,.01,()=>.8);
  assert(s.obstacles[0].kind===expected,'announced events create their promised motifs');
 }
-for(const [time,kind,band] of [[1,'student',1],[25,undefined,0],[49,'conference',2],[73,'worksheet',2]]){
+for(const [time,kind,band] of [[1,'student',1],[25,undefined,1],[49,'conference',2],[73,'email',1]]){
  s=create();s.time=time;s.spawnIn=0;game.step(s,.01,()=>.1);
  assert(s.obstacles[0].kind===kind && s.obstacles[0].band===band,'phase changes encounter patterns');
 }

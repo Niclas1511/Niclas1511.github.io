@@ -5,10 +5,10 @@ const game=new Function(new TextDecoder().decode(bytes)+';return MathRunner;')()
 function assert(ok,message){if(!ok)throw Error(message);}
 function arena(width,dt,type=0){const s=game.create(width);s.bossCount=type;s.nextBossAt=0;game.step(s,dt);s.bossIntro=null;s.boss.attackIn=Infinity;s.powerups.shield=100;return s;}
 function run(s,time,dt){for(let i=0;i<Math.ceil(time/dt);i++)game.step(s,dt,()=>0);}
-for(const width of [420,960])for(const dt of [1/30,1/60,1/120])for(const type of [0,1]){
+for(const width of [420,960])for(const dt of [1/30,1/60,1/120])for(const type of [0,1,2,3]){
  let s=arena(width,dt,type);run(s,17,dt);assert(!s.items.length,'no early arena reward');
  run(s,1.1,dt);const item=s.items[0];
- assert(item?.arena&&item.y>=58&&item.y<=76&&item.speed===0,'rare elevated stationary reward in both arenas');
+ assert(item?.arena&&item.y>=58&&item.y<=76&&item.speed===0,'rare elevated stationary reward in all arenas');
  assert(s.boss.pickupIn>23&&s.boss.pickupIn<=34,'rare repeat interval');
  const x=item.x,y=item.y;run(s,.2,dt);assert(item.x===x&&item.y===y,'arena items do not scroll');
  run(s,7,dt);assert(!s.items.length,'missed reward expires');
@@ -20,4 +20,4 @@ for(const width of [420,960])for(const dt of [1/30,1/60,1/120])for(const type of
  const life=s.items[0].life;s.bossIntro={age:0,duration:2.4,impact:false};run(s,1,dt);
  assert(s.items[0].life===life,'cinematic freezes collectible timer');
 }
-print('Passed: rare cadence, both boss types, fixed positions, expiry, double-jump requirement/reachability and cinematic timer freeze at 30/60/120 FPS.');
+print('Passed: rare cadence, all four boss types, fixed positions, expiry, double-jump requirement/reachability and cinematic timer freeze at 30/60/120 FPS.');

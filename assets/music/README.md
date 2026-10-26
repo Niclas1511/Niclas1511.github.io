@@ -46,6 +46,6 @@ The downloaded classical MIDI files are unmodified. Playback uses their tempo ma
 M is the master mute for both music and effects. The individual Music and Sound
 buttons retain their settings while master mute is active.
 
-Each new run starts with Liebestraum No. 3 from the beginning. N or Next skips
+Each new run starts with a uniformly random classical track from the MIDI collection, from the beginning. The boss theme is excluded from this selection. N or Next skips
 to the next classical track without changing mute/pause settings. Boss themes
 cannot be skipped. Pausing/resuming preserves the current track and position.

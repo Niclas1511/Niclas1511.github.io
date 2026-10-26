@@ -43,6 +43,7 @@ for(const width of [420,960])for(const dt of [1/30,1/60,1/120]){
  assert(!s.over && !s.boss && s.bonus>=100,'positioned jump throws with normal ammo can defeat boss');
  assert(s.x===76 && !s.enemyShots.length && s.chalk===3,'victory restores normal runner position and clears arena fire');
  const restartClock=s.runTime,next=s.nextBossAt,oldDistance=s.distance;
+ assert(s.bossPressure===0,'boss victory resets approach pressure');
  assert(Math.abs(next-restartClock-60)<.001,'next boss scheduled sixty running seconds after victory');
  game.step(s,dt);assert(s.distance>oldDistance && s.runTime>restartClock,'runner resumes after victory');
  s.obstacles=[];s.items=[];s.spawnIn=Infinity;s.runTime=next-.05;

@@ -44,7 +44,7 @@ for(const width of [420,960])for(const dt of [1/30,1/60,1/120]){
  }
  assert(!s.boss&&s.bonus>=100,'timed jump throws can win Blackboard fight');
  s.obstacles=[];s.runTime=s.nextBossAt;s.spawnIn=Infinity;game.step(s,dt);
- assert(s.boss.type==='reviewer','boss rotation returns to Reviewer 2');
+ assert(s.boss.type==='printer','third boss is The Printer');
 }
 // Both graph patterns have survivable routes with one life and no shield.
 for(const width of [420,960])for(const dt of [1/30,1/60,1/120])for(const graph of ['sine','parabola']) {
@@ -60,4 +60,8 @@ for(const width of [420,960])for(const dt of [1/30,1/60,1/120])for(const graph o
  }
  assert(safe,graph+' has a safe single-life dodge route');
 }
+let moving=arena();moving.powerups.shield=100;const heights=[];
+for(let i=0;i<1900;i++){game.step(moving,1/120);heights.push(moving.boss.eraser.y);}
+assert(Math.max(...heights)-Math.min(...heights)>70,'Blackboard weak point changes height over multiple cycles');
+assert(heights.every(y=>y>=128&&y<=212),'weak point stays in reachable arena heights');
 print('Passed: alternating boss types, armor/eraser windows, graph attacks, homing/Hagoromo interaction, timed-throw victories and one-life dodge routes at 30/60/120 FPS.');

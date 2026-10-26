@@ -4,6 +4,7 @@ var RunnerSound = (() => {
     const cues = {
         start: [330,660,.16,'square',880], resume: [440,660,.09,'triangle'], pause: [440,220,.09,'triangle'],
         jump: [220,520,.12,'square'], doubleJump: [390,850,.14,'square'], land: [120,55,.06,'triangle'],
+        espressoJump: [520,1100,.13,'triangle'],
         duck: [220,95,.07,'triangle'], fall: [500,120,.1,'triangle'],
         empty: [100,80,.05,'square'], throw: [900,350,.07,'triangle'], spread: [650,1300,.1,'square'], homing: [400,1100,.14,'triangle'],
         dive: [1200,320,.08,'sawtooth'], giant: [130,420,.2,'square'],

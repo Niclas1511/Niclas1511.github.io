@@ -49,3 +49,34 @@
 .runner-music select { max-width: 100%; padding: 9px; border: 1px solid var(--line); background: var(--background); color: var(--ink); font: inherit; font-size: 13px; border-radius: 0; }
 
 #runner-lives { color: #c95e70; letter-spacing: 1px; white-space: nowrap; }
+
+.runner-touch-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; touch-action: none; }
+.runner-direction-controls { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 50px); gap: 6px; }
+.runner-direction-controls .runner-arena-controls { display: contents; }
+.runner-direction-controls .runner-arena-controls[hidden] { display: none; }
+.runner-direction-controls #runner-left { grid-column: 1; grid-row: 1; }
+.runner-direction-controls #runner-right { grid-column: 3; grid-row: 1; }
+.runner-direction-controls #runner-duck { grid-column: 2; grid-row: 2; }
+.runner-touch-controls[data-arena="false"] .runner-direction-controls { display: flex; }
+.page-runner .runner-touch-controls button { min-width: 0; min-height: 50px; padding: 4px 8px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-size: 23px; }
+.runner-touch-controls button span { display: block; font-size: 11px; }
+.runner-primary-controls { flex-wrap: nowrap; gap: 10px; }
+.page-runner .runner-primary-controls button { width: 76px; height: 76px; border-width: 2px; }
+.page-runner .runner-touch-controls button:active, .page-runner .runner-touch-controls button[aria-pressed="true"] { background: var(--panel); border-color: var(--ink); }
+@media (pointer: coarse) and (max-width: 900px) {
+    .runner-actions { position: sticky; bottom: 0; z-index: 5; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); background: var(--background); }
+    .runner-direction-controls { grid-template-columns: repeat(3, clamp(44px, 11vw, 56px)); grid-template-rows: repeat(2, 50px); gap: 4px; }
+    .runner-touch-controls { gap: 6px; }
+    .page-runner .runner-primary-controls button { width: clamp(54px, 14vw, 76px); height: 72px; }
+    .runner-primary-controls { gap: 6px; }
+    .runner-actions > p { font-size: 11px; }
+}
+
+.runner-save-score { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 16px; padding: 14px; border: 1px solid var(--line); }
+.runner-save-score[hidden] { display: none; }
+.runner-save-score p { flex-basis: 100%; margin: 0; font-size: 13px; }
+.runner-save-score input { box-sizing: border-box; min-width: 0; max-width: 100%; width: 180px; padding: 10px; font: inherit; color: var(--ink); background: var(--background); border: 1px solid var(--line); }
+.runner-leaderboard { margin-top: 16px; font-size: 13px; }
+.runner-leaderboard ol { padding-left: 24px; }
+.runner-leaderboard li { padding: 7px 0; }
+.runner-leaderboard p { color: var(--muted); }

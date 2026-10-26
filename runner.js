@@ -15,6 +15,7 @@
     const comboDisplay = document.querySelector('#runner-combo');
     const phaseDisplay = document.querySelector('#runner-phase');
     const eventDisplay = document.querySelector('#runner-event');
+    const touchControls = document.querySelector('#runner-touch-controls');
     const arenaControls = document.querySelector('#runner-arena-controls');
     const leftButton = document.querySelector('#runner-left');
     const rightButton = document.querySelector('#runner-right');
@@ -29,6 +30,13 @@
     const score = document.querySelector('#runner-score');
     const bestDisplay = document.querySelector('#runner-best');
     const status = document.querySelector('#runner-status');
+    let scoreStorage;
+    try { scoreStorage = localStorage; } catch (_) { }
+    const namedScores = typeof RunnerScores !== 'undefined' ? RunnerScores.create({
+        form: document.querySelector('#runner-save-score'), input: document.querySelector('#runner-score-name'),
+        save: document.querySelector('#runner-score-save'), skip: document.querySelector('#runner-score-skip'),
+        feedback: document.querySelector('#runner-score-feedback'), list: document.querySelector('#runner-score-list'), message: document.querySelector('#runner-score-list-message'), status
+    }, scoreStorage) : null;
     const music = typeof RunnerMusic !== 'undefined' ? RunnerMusic.create(document.querySelector('#runner-music'), document.querySelector('#runner-track'), status) : null;
     const sound = typeof RunnerSound !== 'undefined' ? RunnerSound.create(document.querySelector('#runner-sound'), status) : null;
     const nextTrackButton = document.querySelector('#runner-next-track');
@@ -47,12 +55,14 @@
     let best = 0;
     try { best = Math.max(0, Number(localStorage.getItem(storageKey)) || 0); } catch (_) { }
     bestDisplay.textContent = String(best);
+    const bossTest = /(?:^\?|&)boss=(reviewer|blackboard|printer|deadline)(?:&|$)/.exec(window.location?.search || '')?.[1];
     let state = MathRunner.create();
     let mode = 'ready';
     let lastTime = 0;
     let frame;
     const duckInputs = new Set();
     const jumpInputs = new Set();
+    const chalkInputs = new Set();
     const leftInputs = new Set(), rightInputs = new Set();
     const colors = { sky: '#172431', grid: '#203442', ink: '#e9efdb', mint: '#a9ccb4',
         ground: '#718b83', muted: '#59747a', gold: '#e4bd7a', pink: '#d69a93' };
@@ -192,7 +202,10 @@
     function drawStudent() {
         if (state.hurt > 0 && Math.floor(state.time * 12) % 2 === 0) return;
         const player = MathRunner.player(state);
-        const avatarRect = (x, y, w, h, color) => rect(player.x + (state.facing < 0 ? 24 - x - w : x), y, w, h, color);
+        const jitter = reducedMotion ? 0 : state.espressoSip > 0 ? Math.sin(state.time * 65) * 2 : 0;
+        const stretch = reducedMotion ? 1 : 1 + state.espressoBoost * .18;
+        const avatarRect = (x, y, w, h, color) => rect(player.x + jitter + (state.facing < 0 ? 24 - x - w : x),
+            player.y + (y - player.y) * stretch - (stretch - 1) * player.h, w, h * stretch, color);
         if (state.duck && state.y === MathRunner.ground) {
             avatarRect(0, 236, 24, 10, colors.mint);
             avatarRect(16, 232, 10, 10, colors.gold);
@@ -286,7 +299,7 @@
         }
     }
     function drawWarnings() {
-        const incoming = state.obstacles.filter(o => o.kind && !o.resolved &&
+        const incoming = state.obstacles.filter(o => (o.kind || o.sequenceLead) && !o.resolved &&
             o.x >= canvas.width && (o.x - canvas.width) / o.speed <= .75)
             .sort((a, b) => a.x - b.x)[0];
         if (!incoming) return;
@@ -301,20 +314,25 @@
     function drawObstacle(obstacle) {
         if (obstacle.kind) { drawFlyer(obstacle); return; }
         const { x, y, w, h, band, variant } = obstacle;
-        const motif = MathRunner.motifs[band][variant];
+        const motif = obstacle.armor === 'proof' ? 'PROOF' : obstacle.armor === 'report' ? 'REVIEWER|REPORT' : MathRunner.motifs[band][variant];
         const color = [colors.gold, colors.pink, colors.mint][band];
         // The complete visible tile is the obstacle, including its border.
         rect(x, y + 3, w, h - 6, color);
         rect(x + 3, y, w - 6, h, color);
+        if (obstacle.maxHp) {
+            for (let i = 0; i < obstacle.maxHp; i++) rect(x + 6 + i * 12, y - 7, 8, 3, i < obstacle.hp ? colors.ink : colors.muted);
+            if (obstacle.hitFlash) rect(x + 3, y + 2, w - 6, 2, colors.ink);
+        }
+        if (obstacle.sequenceLead) pixelText(obstacle.label, x + w / 2, y - 14, 8, colors.gold, 108);
         ctx.fillStyle = colors.sky;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = 'bold 13px monospace';
-        if (motif === 'coffee') {
-            rect(x + 23, y + 6, 17, 17, colors.sky);
-            rect(x + 40, y + 9, 7, 10, colors.sky);
-            rect(x + 40, y + 12, 4, 4, color);
-            rect(x + 25, y + 8, 13, 3, colors.ink);
+        if (motif === '8 AM') {
+            rect(x + 19, y + 3, 24, 22, colors.sky);
+            rect(x + 23, y + 1, 6, 3, colors.sky);
+            rect(x + 35, y + 1, 6, 3, colors.sky);
+            pixelText('8 AM', x + 31, y + 14, 9, colors.ink, 23);
         } else if (motif === 'books') {
             rect(x + 16, y + 7, 31, 6, colors.sky);
             rect(x + 20, y + 15, 29, 7, colors.sky);
@@ -352,7 +370,7 @@
         for (let i = 0; i < helper.hits; i++) rect(x - 1 + i * 6, y - 20, 4, 3, '#c5b0de');
     }
     function drawItem(item) {
-        const type = item.kind === 'heart' ? { color: '#e87878' } : MathRunner.powerupTypes.find(type => type.kind === item.kind);
+        const type = item.kind === 'points' ? { color: colors.gold, symbol: '+' } : item.kind === 'heart' ? { color: '#e87878' } : MathRunner.powerupTypes.find(type => type.kind === item.kind);
         const { x, y } = item;
         rect(x + 3, y, 22, 28, colors.grid);
         rect(x, y + 3, 28, 22, colors.grid);
@@ -360,7 +378,15 @@
         rect(x + 4, y + 26, 20, 2, type.color);
         rect(x, y + 4, 2, 20, type.color);
         rect(x + 26, y + 4, 2, 20, type.color);
-        if (item.kind === 'heart') {
+        if (item.kind === 'espresso') {
+            rect(x + 7, y + 11, 13, 11, colors.ink);
+            rect(x + 19, y + 13, 5, 7, colors.ink);
+            rect(x + 20, y + 15, 2, 3, colors.grid);
+            rect(x + 9, y + 12, 9, 3, '#6e4931');
+            rect(x + 8, y + 23, 15, 2, type.color);
+            rect(x + 10, y + 5, 2, 4, colors.ink);
+            rect(x + 16, y + 3, 2, 5, colors.ink);
+        } else if (item.kind === 'heart') {
             ['0110110','1111111','1111111','0111110','0011100','0001000'].forEach((row, j) => {
                 [...row].forEach((pixel, i) => { if (pixel === '1') rect(x + 4 + i * 3, y + 5 + j * 3, 3, 3, type.color); });
             });
@@ -380,8 +406,47 @@
         }
         const phase = state.time * 3;
         rect(x + 14 + Math.cos(phase) * 20, y + 14 + Math.sin(phase) * 19, 2, 2, type.color);
-        pixelText(item.arena ? 'DOUBLE JUMP' : item.risky ? 'RISK / REWARD' : 'PICK UP', x + 14, y - 7, 7, type.color, item.arena || item.risky ? 76 : 43);
+        pixelText(item.arena ? 'DOUBLE JUMP' : item.route !== undefined ? item.risky ? 'HIGH REWARD' : 'SAFE +10' : item.risky ? 'RISK / REWARD' : 'PICK UP', x + 14, y - 7, 7, type.color, item.arena || item.risky ? 76 : 43);
         if (item.arena) pixelText(`${Math.ceil(item.life)}s`, x + 14, y + 36, 9, type.color, 28);
+    }
+    function drawEspressoSteam() {
+        const body = MathRunner.player(state);
+        if (state.powerups.espresso) {
+            for (let i = 0; i < 4; i++) {
+                const phase = reducedMotion ? i / 4 : (state.time * .8 + i / 4) % 1;
+                const x = body.x + 5 + i * 4 + (reducedMotion ? 0 : Math.sin(phase * 9) * 2);
+                rect(x, body.y - 3 - phase * 18, 2, phase < .5 ? 4 : 2, phase < .6 ? colors.ink : colors.muted);
+            }
+        }
+        if (state.espressoSip > 0) {
+            const progress = 1 - state.espressoSip / .95;
+            const x = body.x + 28 + (reducedMotion ? 0 : progress * 12);
+            const y = body.y - 4 - (reducedMotion ? 0 : Math.sin(progress * Math.PI) * 23);
+            rect(x, y, 16, 14, '#fff5dc');
+            rect(x + 15, y + 3, 6, 8, '#fff5dc');
+            rect(x + 17, y + 5, 2, 4, colors.sky);
+            rect(x + 2, y + 1, 12, 3, '#6e4931');
+            rect(x + 3, y + 6, 2, 2, colors.sky);
+            rect(x + 10, y + 6, 3, 1, colors.sky);
+            rect(x + 6, y + 10, 5, 1, colors.sky);
+            rect(x - 2, y + 15, 22, 2, colors.gold);
+            pixelText('ZIP!', x + 8, y - 9, 9, colors.gold, 40);
+        }
+        for (const puff of state.espressoPuffs) {
+            const spread = reducedMotion ? 1 : 1 + puff.age * 2.4;
+            for (let i = -2; i <= 2; i++) {
+                const x = puff.x + 12 + i * 7 * spread;
+                const y = puff.y + Math.abs(i) * 3 + (reducedMotion ? 0 : puff.age * 17);
+                const size = Math.max(2, 9 - puff.age * 8);
+                rect(x - size / 2, y, size, size, colors.ink);
+                rect(x - size / 2 - 2, y + 2, size + 4, Math.max(2, size - 4), colors.ink);
+            }
+            pixelText('PFFT!', puff.x + 12, puff.y + 24, 10, colors.gold, 62);
+        }
+        if (state.espressoBoost > 0 && !reducedMotion) {
+            for (let i = 0; i < 3; i++) rect(body.x + 4 + i * 7, body.y + body.h + 4 + i % 2 * 4,
+                3, 4 + Math.sin(state.time * 35 + i) * 2, colors.gold);
+        }
     }
     function drawShield() {
         if (!state.powerups.shield) return;
@@ -404,7 +469,7 @@
         score.textContent = String(state.score);
         chalkDisplay.textContent = state.powerups.infinite > 0 ? '∞' : String(state.chalk);
         chalkCapacity.hidden = state.powerups.infinite > 0;
-        chalkButton.disabled = mode !== 'running' || Boolean(state.bossIntro) || (state.chalk === 0 && !state.powerups.infinite && !state.hagoromo);
+        chalkButton.disabled = mode !== 'running' || Boolean(state.bossIntro) || (state.chalk === 0 && !state.powerups.infinite && !state.hagoromo && !chalkInputs.size);
         const active = MathRunner.powerupTypes.filter(type => state.powerups[type.kind] > 0);
         const effects = active.map(type => type.kind === 'assistant' ? `Student assistants ×${state.assistants.length} · ${state.assistants.reduce((sum, helper) => sum + helper.hits, 0)} lives` : `${type.label} ${Math.ceil(state.powerups[type.kind])}s`);
         if (state.hagoromo) effects.push(`Hagoromo ×${state.hagoromo} ready — next throw`);
@@ -419,22 +484,26 @@
         nextTrackButton.disabled = arena || (mode !== 'running' && mode !== 'paused');
         if (arena !== previousArena) { clearInputs(); previousArena = arena; }
         arenaControls.hidden = !arena;
-        duckButton.hidden = arena;
+        touchControls.setAttribute('data-arena', String(arena));
+        duckButton.hidden = false;
         leftButton.disabled = rightButton.disabled = mode !== 'running' || !arena || intro;
         canvas.setAttribute('data-arena', String(arena));
         controlsHint.textContent = arena
-            ? 'Boss: ← / → move · Space jump · X throw · Jump to aim · M mute · N next track'
+            ? 'Boss: ← / → move · Space jump · ↓ duck / fast fall · X throw · Jump to aim · M mute · N next track'
             : 'Hold Space / ↑ jump higher · Tap twice double jump · ↓ duck / fast fall · X chalk · P pause · M mute all · N next track';
         const bossWarning = !arena && (state.runTime ?? state.time) >= state.nextBossAt - 3;
         const bossName = state.boss?.name || 'Reviewer 2';
         const scene = intro ? `${bossName} is arriving…` : arena ? state.boss.type === 'blackboard'
             ? `${bossName} · ${state.boss.hp}/${state.boss.maxHp} · ${state.boss.open ? 'Hit the eraser!' : 'Drawing a graph…'}`
+            : state.boss.type === 'printer' ? `${bossName} · ${state.boss.hp}/${state.boss.maxHp} · ${state.boss.jammed ? 'Paper wave — jump!' : state.boss.open ? 'Feed open — throw, then jump!' : 'Incoming sheets — duck!'}`
+            : state.boss.type === 'deadline' ? `${bossName} · ${state.boss.hp}/10 · ${state.boss.slow > 0 ? 'Clock slowed!' : state.boss.hp <= 3 ? 'Final countdown!' : 'Watch the hands'}`
             : `${bossName} · ${state.boss.hp}/6 comments left · Jump to aim`
             : bossWarning ? 'Boss arena incoming — the run will stop!'
+            : state.bossPressure ? `${state.bossPressure === 2 ? 'Final push' : 'Pressure rising'} · boss in ${Math.max(0, Math.ceil(state.nextBossAt - state.runTime))}s`
             : state.event ? `${state.event.label}${state.event.warning ? ' incoming…' : ` · ${Math.ceil(state.event.remaining)}s`}` : '';
         eventDisplay.textContent = scene;
         eventDisplay.hidden = !scene;
-        const sceneKey = `${state.phase}:${state.bossIntro ? 'boss-intro' : state.boss ? 'boss' : bossWarning ? 'boss-warning' : state.event ? state.event.kind + state.event.warning : ''}`;
+        const sceneKey = `${state.phase}:${state.bossIntro ? 'boss-intro' : state.boss ? 'boss' : bossWarning ? 'boss-warning' : state.bossPressure ? 'pressure-'+state.bossPressure : state.event ? state.event.kind + state.event.warning : ''}`;
         if (sceneKey !== announcedScene) {
             announcedScene = sceneKey;
             status.textContent = scene || phaseDisplay.textContent;
@@ -473,10 +542,110 @@
         }
         pixelText(boss.open ? 'HIT THE ERASER' : 'DRAWING…', x + w / 2, y + h + 18, 9, boss.open ? colors.gold : colors.ink, w + 14);
     }
+    function drawPrinter(boss) {
+        const { x, y, w, h } = boss;
+        rect(x + 14, y - 24, w - 34, 32, colors.ink);
+        for (let i = 0; i < 3; i++) rect(x + 25, y - 17 + i * 6, w - 58, 2, colors.muted);
+        rect(x + 3, y + 10, w - 6, h - 15, '#91a3bc');
+        rect(x + 15, y, w - 30, 16, '#b6c3ce');
+        rect(x + 9, y + 18, w - 18, 32, colors.sky);
+        rect(x + w - 27, y + 11, 8, 4, boss.jammed ? colors.pink : colors.mint);
+        rect(x - 6, y + 58, w + 12, 7, colors.muted);
+        pixelText('THE PRINTER', x + w / 2, y - 48, 11, colors.ink, w + 20);
+        for (let i = 0; i < boss.maxHp; i++) rect(x + i * 15, y - 38, 10, 4, i < boss.hp ? colors.gold : colors.muted);
+        if (boss.open && boss.feed) {
+            const f = boss.feed;
+            rect(f.x - 3, f.y - 3, f.w + 6, f.h + 6, colors.gold);
+            rect(f.x, f.y, f.w, f.h, colors.sky);
+            for (let i = 0; i < 3; i++) rect(f.x + 4 + i * 8, f.y + 5, 3, 12, colors.muted);
+        }
+        pixelText(boss.jammed ? 'PAPER JAM!' : boss.open ? 'FEED OPEN' : 'PRINTING…', x + w / 2, y + 35, 10, boss.jammed ? colors.pink : colors.gold, w - 20);
+        if (boss.open && boss.jamAt - boss.cycle < .7) pixelText('JUMP NEXT!', x + w / 2, y - 60, 9, colors.pink, w);
+    }
+    function clockLine(x1, y1, x2, y2, color, size = 3) {
+        const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1))));
+        for (let i = 0; i <= steps; i++) rect(x1 + (x2 - x1) * i / steps - size / 2, y1 + (y2 - y1) * i / steps - size / 2, size, size, color);
+    }
+    function drawGear(x, y, r, angle, color) {
+        for (let i = 0; i < 8; i++) {
+            const a = angle + i * Math.PI / 4;
+            rect(x + Math.cos(a) * r - 3, y + Math.sin(a) * r - 3, 6, 6, color);
+        }
+        rect(x - r + 2, y - r + 2, r * 2 - 4, r * 2 - 4, color);
+        rect(x - 2, y - 2, 4, 4, colors.sky);
+    }
+    function drawDeadline(boss) {
+        const panic = boss.hp <= 3, slowed = boss.slow > 0;
+        const cx = boss.x + 52, cy = boss.y + 52;
+        const wobble = reducedMotion ? 0 : Math.sin(boss.age * (panic ? 25 : 3)) * (panic ? 2 : 1);
+        const rim = slowed ? '#83d9dc' : panic ? colors.pink : colors.gold;
+        drawGear(cx - 35, cy - 54, 11, reducedMotion ? 0 : -boss.handAngle, rim);
+        drawGear(cx + 35, cy - 54, 11, reducedMotion ? 0 : boss.handAngle, rim);
+        rect(cx - 9, cy - 67, 18, 7, rim);
+        for (let y = -48; y <= 48; y += 3) {
+            const half = Math.sqrt(48 * 48 - y * y);
+            rect(cx - half + wobble, cy + y, half * 2 + 2, 3, '#f5e7c7');
+        }
+        for (let i = 0; i < 72; i++) {
+            const a = i * Math.PI / 36;
+            rect(cx + Math.cos(a) * 50 - 2 + wobble, cy + Math.sin(a) * 50 - 2, 4, 4, rim);
+        }
+        for (let i = 0; i < 12; i++) {
+            const a = i * Math.PI / 6;
+            clockLine(cx + Math.cos(a) * 39, cy + Math.sin(a) * 39,
+                cx + Math.cos(a) * 43, cy + Math.sin(a) * 43, '#6e4931', 2);
+        }
+        pixelText('12', cx, cy - 29, 9, '#493f46', 16);
+        pixelText('6', cx, cy + 30, 9, '#493f46', 12);
+        const angle = reducedMotion ? -Math.PI / 2 : boss.handAngle - Math.PI / 2;
+        clockLine(cx, cy, cx + Math.cos(angle) * 35, cy + Math.sin(angle) * 35, panic ? '#b54458' : '#493f46', 3);
+        clockLine(cx, cy, cx + Math.cos(angle * .27 + 1) * 23, cy + Math.sin(angle * .27 + 1) * 23, '#6e4931', 4);
+        rect(cx - 4, cy - 4, 8, 8, rim);
+        if (panic) {
+            clockLine(cx - 22, cy - 12, cx - 11, cy - 8, '#b54458', 2);
+            clockLine(cx + 22, cy - 12, cx + 11, cy - 8, '#b54458', 2);
+            rect(cx - 17, cy + 8, 3, 4, '#493f46'); rect(cx + 14, cy + 8, 3, 4, '#493f46');
+            for (const side of [-1, 1]) {
+                const drop = reducedMotion ? 6 : (boss.age * 19 + side * 7) % 20;
+                rect(cx + side * 57, cy - 14 + drop, 2, 5, '#83d9dc');
+            }
+        }
+        if (boss.hitFlash > 0 && !reducedMotion) {
+            for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2;
+                rect(cx + Math.cos(a) * 14, cy + Math.sin(a) * 14, 3, 3, '#ffffff');
+            }
+        }
+        const swing = reducedMotion ? 0 : Math.sin(boss.age * (panic ? 7 : 3)) * 12;
+        clockLine(cx, cy + 51, cx + swing, cy + 72, rim, 2);
+        drawGear(cx + swing, cy + 75, 6, 0, rim);
+        pixelText('THE DEADLINE', cx, Math.max(45, boss.y - 42), 11, rim, 128);
+        for (let i = 0; i < 10; i++) rect(boss.x + 3 + i * 10, Math.max(57, boss.y - 30), 7, 3, i < boss.hp ? rim : colors.muted);
+        if (slowed) pixelText('TIME OUT…', cx, cy + 62, 9, '#83d9dc', 90);
+        else if (panic) pixelText('TICK! TOCK!', cx, cy + 62, 9, colors.pink, 100);
+        if (boss.attackIn <= .9) {
+            const floor = boss.pattern % 2 === 0, y = floor ? 241 : 218;
+            for (let x = 16; x < canvas.width - 16; x += 15) rect(x, y, 7, 1, rim);
+            pixelText(floor ? 'MINUTE HAND — JUMP' : 'HOUR HAND — DUCK', boss.x - 80, floor ? 260 : 200, 9, rim, 156);
+        }
+    }
+    function drawDeadlineShatter() {
+        const effect = state.deadlineShatter;
+        if (!effect) return;
+        const age = effect.age;
+        for (let i = 0; i < 7; i++) {
+            const angle = i * Math.PI * 2 / 7;
+            const x = effect.x + (reducedMotion ? Math.cos(angle) * 28 : Math.cos(angle) * age * 100);
+            const y = effect.y + (reducedMotion ? Math.sin(angle) * 25 : Math.sin(angle) * age * 70 + age * age * 130);
+            drawGear(x, y, 6 + i % 3, reducedMotion ? 0 : age * (i % 2 ? 9 : -9), colors.gold);
+        }
+        pixelText('DEADLINE EXTENDED!', effect.x, effect.y - 65, 12, colors.gold, 210);
+    }
     function drawBoss() {
         const boss = state.boss;
         if (!boss) return;
         if (boss.type === 'blackboard') { drawBlackboard(boss); return; }
+        if (boss.type === 'printer') { drawPrinter(boss); return; }
+        if (boss.type === 'deadline') { drawDeadline(boss); return; }
         const { x, y, w } = boss;
         rect(x + 16, y + 9, w - 20, 13, '#e87878');
         rect(x + 8, y + 12, 10, 7, colors.gold);
@@ -557,7 +726,7 @@
         const shake = Math.sin(t * 75) * impact * 5;
         pixelText('BOSS ENCOUNTER', w / 2 - entrance, 113, 12, '#e4bd7a', w - 40);
         pixelText((state.boss?.name || 'Reviewer 2').toUpperCase(), w / 2 + entrance + shake, 155, Math.min(38, w / 13), '#e87878', w - 36);
-        pixelText(state.boss?.type === 'blackboard' ? (t < 1.15 ? 'The graphs are coming alive.' : 'DODGE THE GRAPH. HIT THE ERASER.') : (t < 1.15 ? 'Your proof is under review.' : 'REVISE. RESUBMIT. SURVIVE.'), w / 2, 191, 12, colors.ink, w - 40);
+        pixelText(state.boss?.type === 'deadline' ? (t < 1.15 ? 'Time is running out.' : 'DODGE THE HANDS. STOP THE CLOCK.') : state.boss?.type === 'printer' ? (t < 1.15 ? 'Your problem sheets are ready.' : 'DUCK. FEED CHALK. JUMP THE JAM.') : state.boss?.type === 'blackboard' ? (t < 1.15 ? 'The graphs are coming alive.' : 'DODGE THE GRAPH. HIT THE ERASER.') : (t < 1.15 ? 'Your proof is under review.' : 'REVISE. RESUBMIT. SURVIVE.'), w / 2, 191, 12, colors.ink, w - 40);
         if (t > 1.15 && !reducedMotion) {
             const radius = (t - 1.15) * 340;
             for (let i = 0; i < 28; i++) {
@@ -575,6 +744,12 @@
         for (let x = -offset; x < canvas.width; x += 32) rect(x, 0, 1, 252, colors.grid);
         for (let y = 28; y < 252; y += 32) rect(0, y, canvas.width, 1, colors.grid);
         drawMathBackground(phase);
+        if (!state.boss && state.bossPressure) {
+            const x = canvas.width - 126;
+            rect(x, 21, 106, 3, colors.muted);
+            rect(x, 21, 106 * Math.max(0, Math.min(1, (20 - (state.nextBossAt - state.runTime)) / 20)), 3, state.bossPressure === 2 ? colors.pink : colors.gold);
+            pixelText(state.bossPressure === 2 ? 'FINAL PUSH' : 'PRESSURE RISING', x + 53, 12, 8, colors.gold, 110);
+        }
         ctx.font = '12px monospace';
         ctx.fillStyle = colors.muted;
         ctx.textAlign = 'left';
@@ -594,6 +769,7 @@
         rect(state.x - 7, 252, 39, 3, colors.sky);
         if (state.boss) { rect(8, 234, 3, 18, colors.gold); rect(canvas.width - 11, 234, 3, 18, colors.gold); }
         drawStudent();
+        drawEspressoSteam();
         state.assistants.forEach(drawAssistant);
         drawShield();
         state.items.forEach(drawItem);
@@ -602,6 +778,20 @@
         drawBoss();
         drawThrowGuide();
         for (const shot of state.enemyShots) {
+            if (shot.clockHand) {
+                const color = state.boss?.slow > 0 ? '#83d9dc' : colors.gold;
+                rect(shot.x + 5, shot.y + 4, shot.w - 8, 6, color);
+                rect(shot.x, shot.y, 6, shot.h, color);
+                rect(shot.x - 3, shot.y + 4, 4, 6, color);
+                rect(shot.x + shot.w - 10, shot.y + 2, 10, 10, color);
+                continue;
+            }
+            if (shot.paper) {
+                rect(shot.x, shot.y, shot.w, shot.h, colors.ink);
+                for (let i = 0; i < (shot.wave ? 3 : 2); i++) rect(shot.x + 4, shot.y + 4 + i * 5, shot.w - 8, 1, colors.muted);
+                if (shot.wave) rect(shot.x + 4, shot.y - 3, shot.w - 8, 3, colors.gold);
+                continue;
+            }
             if (shot.graph) {
                 for (const point of shot.trail || []) rect(point.x + shot.w / 2, point.y + shot.h / 2, 2, 2, colors.mint);
                 pixelText(shot.graph === 'sine' ? '∿' : 'x²', shot.x + shot.w / 2, shot.y + shot.h / 2, 16, colors.ink, 24);
@@ -641,13 +831,17 @@
         }
         for (const particle of state.particles) rect(particle.x, particle.y, 3, 3, particle.color);
         for (const text of state.popups) pixelText(text.text, Math.max(75, Math.min(canvas.width - 75, text.x)), text.y, 10, text.color, 150);
+        drawDeadlineShatter();
         drawBossIntro();
-        // Two quiet pips show the remaining jumps, including the mid-air jump.
-        for (let i = 0; i < 2; i++) rect(78 + i * 9, 301, 5, 5,
-            i < 2 - state.jumps ? colors.mint : colors.muted);
+        // Espresso grants one extra jump; consumed jumps stay consumed on refresh.
+        const maxJumps = state.powerups.espresso > 0 ? 3 : 2;
+        for (let i = 0; i < maxJumps; i++) rect(78 + i * 9, 301, 5, 5,
+            i < maxJumps - state.jumps ? colors.mint : colors.muted);
     }
     function clearInputs() {
         duckInputs.clear();
+        chalkInputs.clear();
+        chalkButton.setAttribute('aria-pressed', 'false');
         jumpInputs.clear();
         leftInputs.clear(); rightInputs.clear();
         state.move = 0;
@@ -656,7 +850,7 @@
         duckButton.setAttribute('aria-pressed', 'false');
     }
     function setDuck(key, held) {
-        if (held && mode === 'running' && !state.boss) {
+        if (held && mode === 'running' && !state.bossIntro) {
             if (!duckInputs.size) sound?.play(state.y < MathRunner.ground ? 'fall' : 'duck');
             duckInputs.add(key);
         }
@@ -685,17 +879,20 @@
         music?.setRunning(false);
         clearInputs();
         setControls(false);
-        if (state.score > best) {
+        if (!bossTest && state.score > best) {
             best = state.score;
             bestDisplay.textContent = String(best);
             try { localStorage.setItem(storageKey, String(best)); } catch (_) { }
         }
         showOverlay(`Semester over. Score ${state.score}.`, 'Try again');
+        if (!bossTest) namedScores?.offer(state.score);
     }
     function tick(time) {
         if (mode !== 'running') return;
         if (lastTime) MathRunner.step(state, (time - lastTime) / 1000);
         lastTime = time;
+        if (chalkInputs.size && !state.over && !state.bossIntro && state.cooldown <= 0 &&
+            (state.chalk > 0 || state.powerups.infinite || state.hagoromo)) MathRunner.throwChalk(state);
         sound?.drain(state);
         updateHud();
         draw();
@@ -704,10 +901,14 @@
     }
     function run() {
         const resuming = mode === 'paused';
-        if (!resuming) { sound?.stop(); music?.restart(); }
+        if (!resuming) { sound?.stop(); music?.restart(); namedScores?.dismiss(); }
         sound?.unlock()?.then(() => { if (mode === 'running') sound.play(resuming ? 'resume' : 'start'); });
         if (mode !== 'paused') {
             state = MathRunner.create(canvas.width);
+            if (bossTest) {
+                state.bossCount = { reviewer: 0, blackboard: 1, printer: 2, deadline: 3 }[bossTest];
+                state.nextBossAt = 0; state.spawnIn = Infinity; state.lives = state.maxLives;
+            }
             score.textContent = '0';
             chalkDisplay.textContent = '3';
             announcedPickup = 0;
@@ -778,10 +979,19 @@
         if (event.detail === 0) setDuck('toggle', !duckInputs.has('toggle'));
     });
     chalkButton.addEventListener('pointerdown', event => {
-        if (mode !== 'running') return;
+        if (mode !== 'running' || state.bossIntro) return;
         event.preventDefault();
+        chalkButton.setPointerCapture(event.pointerId);
+        chalkInputs.add(event.pointerId);
+        chalkButton.setAttribute('aria-pressed', 'true');
         MathRunner.throwChalk(state);
     });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        chalkButton.addEventListener(type, event => {
+            chalkInputs.delete(event.pointerId);
+            chalkButton.setAttribute('aria-pressed', String(chalkInputs.size > 0));
+        });
+    }
     chalkButton.addEventListener('click', event => {
         if (event.detail === 0 && mode === 'running') MathRunner.throwChalk(state);
     });
@@ -846,7 +1056,7 @@
         const inputSet = ['ArrowLeft','KeyA'].includes(event.code) ? leftInputs : ['ArrowRight','KeyD'].includes(event.code) ? rightInputs : null;
         if (inputSet) { inputSet.add(event.code); refreshArenaInputs(); }
         if (event.code === 'KeyX' && !event.repeat) MathRunner.throwChalk(state);
-        if (event.code === 'ArrowDown' && !state.boss) setDuck('keyboard', true);
+        if (event.code === 'ArrowDown') setDuck('keyboard', true);
         else if (!event.repeat && ['Space', 'ArrowUp'].includes(event.code)) pressJump(event.code);
     });
     document.addEventListener('keyup', event => {
@@ -872,6 +1082,7 @@
     }
     window.addEventListener('resize', resize);
     duckButton.setAttribute('aria-pressed', 'false');
+    if (bossTest) message.textContent = `Boss practice: ${{ reviewer: 'Reviewer 2', blackboard: 'The Blackboard', printer: 'The Printer', deadline: 'The Deadline' }[bossTest]} · Scores are not saved.`;
     resize();
     draw();
 })();

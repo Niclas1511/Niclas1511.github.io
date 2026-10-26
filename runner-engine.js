@@ -3,9 +3,15 @@ var MathRunner = (() => {
     const ground = 252;
     const bands = [{ y: 222, h: 30 }, { y: 192, h: 28 }, { y: 132, h: 28 }];
     const motifs = [
-        ['coffee', 'books', 'EXAM', 'R/I', 'Tor₁', 'Ext¹', 'GRANT'],
+        ['8 AM', 'books', 'EXAM', 'R/I', 'Gal(K/F)', 'Ext¹', 'GRANT'],
         ['Ax = b', 'I ⊂ R', 'ker φ', '0→M→N', 'REVIEWER|2', 'REVISE &|RESUBMIT', 'DEADLINE'],
         ['Spec R', 'THESIS', 'PhD|DEFENSE', 'NOETHER', 'LEMMA|2.1', 'PROOF?', 'dim R']
+    ];
+    const sequences = [
+        { name: 'duck-jump', label: 'DUCK → JUMP', steps: [[1, 0], [0, .82], [2, 1.95]] },
+        { name: 'jump-duck', label: 'JUMP → DUCK', steps: [[0, 0], [1, 1.05]] },
+        { name: 'exam', label: 'EXAM: DUCK / JUMP', steps: [[1, 0], [0, .78], [1, 1.75]] },
+        { name: 'inbox', label: 'INBOX WAVE', steps: [[1, 0], [0, .95], [1, 2]], email: true }
     ];
     const flyers = [
         { kind: 'student', label: 'QUICK QUESTION!', band: 1, y: 176, w: 84, h: 50, pace: 1.05 },
@@ -20,7 +26,8 @@ var MathRunner = (() => {
         { kind: 'spread', label: 'Triple throw', duration: 10, symbol: '3', color: '#e4bd7a' },
         { kind: 'shield', label: 'Invincible', duration: 6, symbol: 'S', color: '#a9c9ef' },
         { kind: 'assistant', label: 'Student assistant', duration: 0, symbol: '', color: '#c5b0de' },
-        { kind: 'homing', label: 'Homing chalk', duration: 10, symbol: 'H', color: '#83d9dc' }
+        { kind: 'homing', label: 'Homing chalk', duration: 10, symbol: 'H', color: '#83d9dc' },
+        { kind: 'espresso', label: 'Espresso jump', duration: 10, symbol: '', color: '#d9aa76' }
     ];
     const phases = [
         { label: 'Lecture week', sky: '#172431', grid: '#203442', ground: '#263e44', accent: '#a9ccb4' },
@@ -35,6 +42,11 @@ var MathRunner = (() => {
         if (!kind || local < 6 || local >= 16) return null;
         return { kind, label: kind === 'office' ? 'Office hours' : 'Inbox overflow',
             warning: local < 8, remaining: 16 - local };
+    }
+    function pressureAt(time, nextBossAt) {
+        if (!Number.isFinite(nextBossAt)) return 0;
+        const remaining = nextBossAt - time;
+        return remaining <= 10 ? 2 : remaining <= 20 ? 1 : 0;
     }
     function sound(state, name) {
         if (state.sounds.length < 64) state.sounds.push(name);
@@ -80,7 +92,13 @@ var MathRunner = (() => {
             }
         }
     }
-    function hitReaction(state, hit, color = '#e9efdb') {
+    function hitReaction(state, hit, color = '#e9efdb', force = false) {
+        if (!force && hit.hp > 1) {
+            hit.hp--; hit.hitFlash = .15; sound(state, 'hit');
+            burst(state, hit.x + hit.w / 2, hit.y + 10, color, 5);
+            return;
+        }
+        if (hit.hp) hit.hp = 0;
         sound(state, hit.kind === 'student' ? 'answered' : hit.kind === 'worksheet' ? 'fold' : 'hit');
         if (hit.kind === 'student' || hit.kind === 'worksheet') {
             hit.resolved = true;
@@ -91,6 +109,7 @@ var MathRunner = (() => {
     }
     const bossInterval = 60;
     function beginBoss(state) {
+        state.bossPressure = 0;
         sound(state, 'boss');
         state.bossIntro = { age: 0, duration: 2.4, impact: false };
         // Transition only after the last runner hazard has left the field.
@@ -108,11 +127,18 @@ var MathRunner = (() => {
         state.aim = null; state.aimAngle = -.4; state.facing = 1;
         state.y = ground; state.vy = 0; state.jumps = 0; state.duck = false;
         state.jumpBuffer = 0; state.jumpHeld = false;
-        const blackboard = state.bossCount++ % 2 === 1;
+        const bossIndex = state.bossCount++ % 4;
+        const blackboard = bossIndex === 1;
         state.boss = { kind: 'boss', x: state.width - 108, y: 120, w: 88, h: 30,
             hp: 6, maxHp: 6, age: 0, pickupIn: 18, attackIn: 2.4, pattern: 0, target: null, type: 'reviewer', name: 'Reviewer 2' };
         if (blackboard) Object.assign(state.boss, { type: 'blackboard', name: 'The Blackboard',
             x: Math.max(140, state.width - 154), y: 100, w: 122, h: 76, hp: 8, maxHp: 8, open: false, cycle: 0, pattern: 0 });
+        if (bossIndex === 2) Object.assign(state.boss, { type: 'printer', name: 'The Printer',
+            x: Math.max(150, state.width - 160), y: 166, w: 124, h: 80, hp: 8, maxHp: 8,
+            open: false, cycle: 0, pattern: 0, jamAt: 3.6, sheetsFired: false, jammed: false });
+        if (bossIndex === 3) Object.assign(state.boss, { type: 'deadline', name: 'The Deadline',
+            x: Math.max(150, state.width - 154), y: 94, w: 104, h: 104,
+            hp: 10, maxHp: 10, slow: 0, hitFlash: 0, handAngle: 0, attackIn: 2.8, pattern: 0 });
         for (const helper of state.assistants) { helper.flight = null; helper.y = ground; helper.vy = 0; helper.x = 186; }
         state.chalk = 3; state.reload = 0; state.cooldown = 0;
         popup(state, 'Boss arena! Move, jump, throw', state.width / 2, 70, '#e87878');
@@ -127,6 +153,7 @@ var MathRunner = (() => {
         state.duck = false; state.jumpBuffer = 0; state.jumpHeld = false;
         for (const helper of state.assistants) { helper.flight = null; helper.x = Math.min(state.width - 40, 186); helper.y = ground; helper.vy = 0; }
         state.nextBossAt = state.runTime + bossInterval;
+        state.bossPressure = 0;
         state.spawnIn = 1.6; state.lastArrival = -Infinity;
         state.chalk = 3; state.reload = 0;
     }
@@ -141,9 +168,11 @@ var MathRunner = (() => {
     }
     function bossTargets(boss) {
         if (!boss) return [];
-        if (boss.type !== 'blackboard') return [boss];
+        if (boss.type === 'deadline') return [{ x: boss.x + 16, y: boss.y + 16, w: 72, h: 72, kind: 'boss', owner: boss,
+            prevX: (boss.prevX ?? boss.x) + 16, prevY: (boss.prevY ?? boss.y) + 16 }];
+        if (!['blackboard', 'printer'].includes(boss.type)) return [boss];
         const body = { x: boss.x, y: boss.y, w: boss.w, h: boss.h, kind: 'board' };
-        return boss.open ? [{ ...boss.eraser, kind: 'boss', owner: boss }, body] : [body];
+        return boss.open ? [{ ...(boss.type === 'printer' ? boss.feed : boss.eraser), kind: 'boss', owner: boss }, body] : [body];
     }
     function updateBlackboard(state, dt) {
         const boss = state.boss;
@@ -153,18 +182,70 @@ var MathRunner = (() => {
         if (boss.cycle >= duration) {
             boss.cycle -= duration; boss.pattern++; boss.fired = false;
         }
+        const heights = [100, 156, 72, 128];
+        const from = boss.pattern ? heights[(boss.pattern - 1) % heights.length] : 100;
+        const t = Math.min(1, boss.cycle / drawing), ease = t * t * (3 - 2 * t);
+        boss.prevY = boss.y;
+        boss.y = from + (heights[boss.pattern % heights.length] - from) * ease;
         boss.open = boss.cycle >= drawing;
-        boss.eraser = { x: boss.x - 24, y: boss.y + 56, w: 32, h: 18 };
+        const previous = boss.eraser;
+        boss.eraser = { x: boss.x - 24, y: boss.y + 56, w: 32, h: 18,
+            prevX: previous?.x ?? boss.x - 24, prevY: previous?.y ?? boss.y + 56 };
         if (boss.open && !boss.fired) {
             boss.fired = true; sound(state, 'attack');
             state.enemyShots.push({ x: boss.x - 34, y: 224, w: 22, h: 18,
                 vx: -160, vy: 0, age: 0, graph: boss.pattern % 2 ? 'sine' : 'parabola' });
         }
     }
+    function updatePrinter(state, dt) {
+        const boss = state.boss;
+        boss.age += dt; boss.cycle += dt;
+        if (boss.cycle >= 6.2) {
+            boss.cycle -= 6.2; boss.pattern++; boss.jamAt = 3.6;
+            boss.sheetsFired = false; boss.jammed = false;
+        }
+        boss.feed = { x: boss.x - 24, y: boss.y + 24, w: 32, h: 24 };
+        boss.open = boss.cycle >= 1.05 && boss.cycle < boss.jamAt;
+        if (boss.cycle >= .85 && !boss.sheetsFired) {
+            boss.sheetsFired = true; sound(state, 'attack');
+            state.enemyShots.push({ x: boss.x - 26, y: 211, w: 30, h: 16,
+                vx: -180, vy: 0, paper: true });
+        }
+        if (boss.cycle >= boss.jamAt && !boss.jammed) {
+            boss.jammed = true; boss.open = false; sound(state, 'attack');
+            state.enemyShots.push({ x: boss.x - 30, y: 232, w: 32, h: 20,
+                vx: -175, vy: 0, wave: true, paper: true });
+            burst(state, boss.x, ground - 12, '#e9efdb', 12);
+        }
+    }
+    function updateDeadline(state, dt) {
+        const boss = state.boss;
+        const scale = boss.slow > 0 ? .45 : 1;
+        const frantic = boss.hp <= 3;
+        const clockDt = dt * scale;
+        boss.prevX = boss.x; boss.prevY = boss.y;
+        boss.slow = Math.max(0, boss.slow - dt);
+        boss.hitFlash = Math.max(0, boss.hitFlash - dt);
+        boss.age += clockDt;
+        boss.y = 94 + Math.sin(boss.age * .8) * 14;
+        boss.handAngle += clockDt * (frantic ? 4.6 : 2);
+        boss.attackIn -= clockDt;
+        if (boss.attackIn <= 0) {
+            const floor = boss.pattern++ % 2 === 0;
+            const direction = state.x + 12 < boss.x + 52 ? -1 : 1;
+            state.enemyShots.push({ x: direction < 0 ? boss.x - 24 : boss.x + 80, y: floor ? 234 : 211,
+                w: 48, h: 14, vx: direction * (frantic ? 220 : 170), vy: 0,
+                clockHand: floor ? 'minute' : 'hour' });
+            sound(state, 'attack');
+            boss.attackIn = frantic ? 1.7 : 2.8;
+        }
+    }
     function updateBoss(state, dt) {
         const boss = state.boss;
         if (!boss) return;
         if (boss.type === 'blackboard') { updateBlackboard(state, dt); return; }
+        if (boss.type === 'printer') { updatePrinter(state, dt); return; }
+        if (boss.type === 'deadline') { updateDeadline(state, dt); return; }
         boss.prevX = boss.x; boss.prevY = boss.y;
         boss.age += dt;
         Object.assign(boss, bossPosition(state.width, boss.age, boss.w));
@@ -194,14 +275,14 @@ var MathRunner = (() => {
     function create(width = 960) {
         return { width, y: ground, vy: 0, duck: false, time: 0, distance: 0,
             score: 0, lives: 1, maxLives: 5, hurt: 0, speed: 180, spawnIn: 1.2, obstacles: [], over: false, count: 0,
-            jumps: 0, jumpBuffer: 0, shots: [], particles: [], chalk: 3, reload: 0,
+            jumps: 0, jumpBuffer: 0, espressoSip: 0, espressoBoost: 0, espressoPuffs: [], shots: [], particles: [], chalk: 3, reload: 0,
             cooldown: 0, throwFlash: 0, bonus: 0, lastArrival: -Infinity,
-            encounters: 0, itemCount: 0, items: [], powerups: { infinite: 0, spread: 0, shield: 0, assistant: 0, homing: 0 },
+            encounters: 0, itemCount: 0, nextRoute: 0, items: [], powerups: { infinite: 0, spread: 0, shield: 0, assistant: 0, homing: 0, espresso: 0 },
             assistants: [], nextAssistant: 0, sounds: [],
             pickupSerial: 0, pickupMessage: '', phase: 0, event: null,
             jumpHeld: true, streak: 0, multiplier: 1,
             volleys: [], nextVolley: 0, popups: [], nearMisses: 0,
-            boss: null, bossCount: 0, bossIntro: null, nextBossAt: bossInterval, runTime: null, enemyShots: [],
+            boss: null, bossPressure: 0, deadlineShatter: null, bossCount: 0, bossIntro: null, nextBossAt: bossInterval, runTime: null, enemyShots: [],
             hagoromo: 0, rewardSerial: 0, explosions: [], impacts: [],
             x: 76, move: 0, aimAngle: -.4, aim: null, facing: 1 };
     }
@@ -212,10 +293,15 @@ var MathRunner = (() => {
     function jump(state) {
         if (state.over || state.bossIntro) return;
         if (state.duck && state.y === ground) return;
-        if (state.jumps >= 2) { state.jumpBuffer = .12; return; }
+        if (state.jumps >= (state.powerups.espresso > 0 ? 3 : 2)) { state.jumpBuffer = .12; return; }
         state.vy = state.jumps === 0 ? -510 : -430;
         state.jumps++;
-        sound(state, state.jumps === 2 ? 'doubleJump' : 'jump');
+        if (state.jumps === 3) {
+            state.espressoBoost = .6;
+            state.espressoPuffs.push({ x: state.x, y: state.y, age: 0 });
+            if (state.espressoPuffs.length > 6) state.espressoPuffs.shift();
+        }
+        sound(state, state.jumps === 3 ? 'espressoJump' : state.jumps === 2 ? 'doubleJump' : 'jump');
         state.jumpBuffer = 0;
         burst(state, state.x + 12, state.y - 3, '#a9ccb4', 6);
     }
@@ -317,7 +403,7 @@ var MathRunner = (() => {
                 shotImpact(body, old.x, old.y, o) !== null);
             if (hit) {
                 if (state.boss) { hit.used = true; burst(state, hit.x, hit.y, '#c5b0de'); }
-                else hitReaction(state, hit, '#c5b0de');
+                else hitReaction(state, hit, '#c5b0de', true);
                 helper.hits--;
                 sound(state, 'ouch');
                 helper.hurt = .65;
@@ -338,11 +424,14 @@ var MathRunner = (() => {
     }
 
     function damageBoss(state, boss, amount) {
-        if (boss.type === 'blackboard' && !boss.open) return false;
+        if (['blackboard', 'printer'].includes(boss.type) && !boss.open) return false;
+        if (boss.type === 'printer') boss.jamAt = Math.min(boss.jamAt, boss.cycle + .65);
+        if (boss.type === 'deadline') { boss.slow = .8; boss.hitFlash = .18; }
         sound(state, 'bossHit');
         boss.hp = Math.max(0, boss.hp - amount);
         burst(state, boss.x + 20, boss.y + 15, '#e87878');
         if (boss.hp === 0) {
+            if (boss.type === 'deadline') state.deadlineShatter = { x: boss.x + 52, y: boss.y + 52, age: 0 };
             burst(state, boss.x + 44, boss.y + 15, '#e87878', 28);
             state.bonus += 100;
             popup(state, 'Accepted! +100', state.width / 2, 90, '#a9ccb4');
@@ -371,13 +460,13 @@ var MathRunner = (() => {
         let hits = 0;
         for (const obstacle of state.obstacles) {
             if (obstacle.destroyed || obstacle.resolved || !inBlast(x, y, radius, obstacle)) continue;
-            hitReaction(state, obstacle, '#fff1b8');
+            hitReaction(state, obstacle, '#fff1b8', true);
             hits++;
         }
         // Clear hostile chalk too; collectibles and the player remain unharmed.
         state.enemyShots = state.enemyShots.filter(enemy => !inBlast(x, y, radius, enemy));
-        if (state.boss && !blast.bossHit && (state.boss.type !== 'blackboard' || state.boss.open) &&
-            inBlast(x, y, radius, state.boss.type === 'blackboard' ? state.boss.eraser : state.boss)) {
+        if (state.boss && !blast.bossHit && (!['blackboard', 'printer'].includes(state.boss.type) || state.boss.open) &&
+            inBlast(x, y, radius, state.boss.type === 'blackboard' ? state.boss.eraser : state.boss.type === 'printer' ? state.boss.feed : state.boss)) {
             blast.bossHit = true;
             damageBoss(state, state.boss, 3);
             hits++;
@@ -431,6 +520,7 @@ var MathRunner = (() => {
         state.event = nextEvent;
         if (!state.boss && state.runTime >= state.nextBossAt && !state.obstacles.some(o => !o.resolved)) { beginBoss(state); return; }
         const arena = Boolean(state.boss);
+        state.bossPressure = arena ? 0 : pressureAt(state.runTime, state.nextBossAt);
         const previousBody = player(state);
         if (arena) {
             state.x = Math.max(12, Math.min(state.width - 36, state.x + Math.max(-1, Math.min(1, state.move)) * 230 * dt));
@@ -463,6 +553,10 @@ var MathRunner = (() => {
         state.cooldown = Math.max(0, state.cooldown - dt);
         state.throwFlash = Math.max(0, state.throwFlash - dt);
         state.hurt = Math.max(0, state.hurt - dt);
+        state.espressoSip = Math.max(0, state.espressoSip - dt);
+        state.espressoBoost = Math.max(0, state.espressoBoost - dt);
+        for (const puff of state.espressoPuffs) puff.age += dt;
+        state.espressoPuffs = state.espressoPuffs.filter(puff => puff.age < .7);
         state.jumpBuffer = Math.max(0, state.jumpBuffer - dt);
         if (state.chalk < 3) {
             state.reload += dt;
@@ -493,30 +587,53 @@ var MathRunner = (() => {
             else if (state.phase === 1) { band = [0, 1, 0, 2][state.encounters % 4]; variant = band === 0 ? 2 : 6; type = state.encounters % 3 === 2 ? flyers[4] : null; }
             else if (state.phase === 2 && flying) type = flyers[state.encounters % 2 ? 3 : 5];
             else if (state.phase === 3) type = flyers[state.encounters % 3 ? 1 : 4];
-            const speed = state.speed * (type ? type.pace : 1);
+            const encounter = state.encounters + 1;
+            const reward = encounter % 8 === 0 || encounter % 4 === 3;
+            const sequence = !reward && state.runTime >= 12 && !(state.event?.kind === 'office' && !state.event.warning)
+                ? state.phase === 3 ? sequences[3] : state.phase === 1 ? sequences[2]
+                    : state.bossPressure === 2 ? sequences[2]
+                    : (state.bossPressure === 1 ? encounter % 2 === 0 : encounter % 4 === 2)
+                        ? sequences[Math.floor(state.encounters / 4) % 2] : null : null;
+            const speed = sequence ? state.speed * (sequence.email ? 1.35 : 1) : state.speed * (type ? type.pace : 1);
+            const clearance = state.bossPressure === 2 ? 1.25 : state.bossPressure === 1 ? 1.45 : 1.6;
             const x = Math.max(state.width + (type ? speed * .7 : 24),
-                100 + Math.max(0, state.lastArrival + 1.6 - state.time) * speed);
+                100 + Math.max(0, state.lastArrival + clearance - state.time) * speed);
             state.lastArrival = state.time + (x - 100) / speed;
             state.encounters++;
             if (state.encounters % 8 === 0) {
                 state.items.push({ x, y: 220, w: 28, h: 28, speed, kind: 'heart' });
             } else if (state.encounters % 4 === 3) {
-                const item = powerupTypes[state.itemCount++ % powerupTypes.length];
-                state.items.push({ x, y: 220, w: 28, h: 28, speed, kind: item.kind });
-                const risky = powerupTypes[state.itemCount % powerupTypes.length];
-                state.items.push({ x: x + 42, y: 140, w: 28, h: 28, speed, kind: risky.kind, risky: true });
+                const route = state.nextRoute++;
+                const item = powerupTypes[state.itemCount % powerupTypes.length];
+                if (route % 2 === 0) state.itemCount++;
+                state.items.push({ x, y: 220, w: 28, h: 28, speed, kind: 'points', route, points: 10 });
+                state.items.push({ x: x - speed * .35, y: 86, w: 28, h: 28, speed,
+                    kind: route % 2 ? 'heart' : item.kind, route, risky: true });
                 // A high obstacle trails the elevated reward; the low route stays clear.
                 state.obstacles.push({ x: x + 115, ...bands[2], w: 62, band: 2, variant: 2,
                     speed, baseY: bands[2].y, age: 0, optional: true });
+            } else if (sequence) {
+                sequence.steps.forEach(([lane, offset], index) => {
+                    const flyer = sequence.email ? flyers[1] : null;
+                    state.obstacles.push({ x: x + offset * speed, ...bands[lane], w: 44,
+                        ...(flyer || {}), band: lane, y: bands[lane].y, baseY: bands[lane].y,
+                        variant: lane === 0 ? 2 : 0, speed, age: 0, id: state.count++,
+                        sequence: sequence.name, label: sequence.label, sequenceLead: index === 0,
+                        ...(state.bossPressure === 2 && !sequence.email && index === sequence.steps.length - 1
+                            ? { armor: 'proof', hp: 2, maxHp: 2 } : {}) });
+                });
+                state.lastArrival += sequence.steps.at(-1)[1];
             } else {
+                const armor = !type && encounter % 5 === 0 ? (encounter % 10 === 0 ? 'report' : 'proof') : null;
                 state.obstacles.push({ x, ...bands[band], w: 62, band, variant,
                     ...(type || {}), speed, baseY: type ? type.y : bands[band].y,
-                    age: 0, id: state.count++ });
+                    age: 0, id: state.count++, ...(armor ? { armor, hp: armor === 'report' ? 3 : 2, maxHp: armor === 'report' ? 3 : 2 } : {}) });
             }
             // Leave room to land even after a second jump.
-            state.spawnIn = 1.6 + random() * .55;
+            state.spawnIn = (sequence ? sequence.steps.at(-1)[1] + (sequence.email ? 3.4 : clearance) : clearance) + random() * (state.bossPressure ? .3 : .55);
         }
         for (const obstacle of state.obstacles) {
+            obstacle.hitFlash = Math.max(0, (obstacle.hitFlash || 0) - dt);
             obstacle.prevX = obstacle.x;
             obstacle.prevY = obstacle.y;
             obstacle.x -= (obstacle.speed || state.speed) * dt;
@@ -537,9 +654,16 @@ var MathRunner = (() => {
             }
         }
         for (const item of state.items) {
+            if (item.collected) continue;
             if (item.arena) { item.life -= dt; if (item.life <= 0) continue; }
             item.x -= item.speed * dt;
             if (overlaps(player(state), item)) {
+                if (item.kind === 'points') {
+                    state.bonus += item.points || 10; item.collected = true;
+                    state.pickupSerial++; state.pickupMessage = 'Safe route — +10 points';
+                    popup(state, '+10', item.x, item.y - 15);
+                    continue;
+                }
                 if (item.kind === 'heart') {
                     const healed = state.lives < state.maxLives;
                     state.lives = Math.min(state.maxLives, state.lives + 1);
@@ -552,6 +676,7 @@ var MathRunner = (() => {
                 }
                 const type = powerupTypes.find(type => type.kind === item.kind);
                 state.powerups[item.kind] = type.duration;
+                if (item.kind === 'espresso') state.espressoSip = .95;
                 if (item.kind === 'assistant') state.assistants.push({ id: state.nextAssistant++, remaining: Infinity,
                     hits: 5, hurt: 0, x: Math.min(state.width - 40, state.x + 110 + state.assistants.length * 32),
                     y: ground, vy: 0, flight: null });
@@ -641,7 +766,7 @@ var MathRunner = (() => {
             if (boxes.some(box => overlaps(body, box))) {
                 if (state.powerups.shield > 0) {
                     sound(state, 'shield');
-                    hitReaction(state, obstacle, '#a9c9ef');
+                    hitReaction(state, obstacle, '#a9c9ef', true);
                 } else damagePlayer(state);
             }
         }
@@ -649,7 +774,8 @@ var MathRunner = (() => {
             if (shot.used) continue;
             const oldX = shot.x, oldY = shot.y;
             shot.prevX = oldX; shot.prevY = oldY;
-            shot.x += shot.vx * dt; shot.y += shot.vy * dt;
+            const slow = shot.clockHand && state.boss?.type === 'deadline' && state.boss.slow > 0 ? .45 : 1;
+            shot.x += shot.vx * dt * slow; shot.y += shot.vy * dt * slow;
             if (shot.graph) {
                 shot.age += dt;
                 shot.trail ||= []; shot.trail.push({ x: oldX, y: oldY });
@@ -682,6 +808,10 @@ var MathRunner = (() => {
             if (explosion.age >= .55 || state.over) finishVolley(state, explosion.shot);
         }
         state.explosions = state.explosions.filter(explosion => explosion.age < .55 && !state.over);
+        if (state.deadlineShatter) {
+            state.deadlineShatter.age += dt;
+            if (state.deadlineShatter.age > 1) state.deadlineShatter = null;
+        }
         for (const impact of state.impacts) impact.age += dt;
         state.impacts = state.impacts.filter(impact => impact.age < .25);
         for (const text of state.popups) { text.life -= dt; text.y -= 20 * dt; }
@@ -695,5 +825,5 @@ var MathRunner = (() => {
         state.particles = state.particles.filter(particle => particle.life > 0);
         state.score = Math.floor(state.distance / 20) + state.bonus;
     }
-    return { ground, bands, motifs, flyers, powerupTypes, phases, phaseAt, eventAt, bossInterval, create, player, jump, releaseJump, throwChalk, overlaps, shotImpact, step };
+    return { ground, bands, motifs, sequences, flyers, powerupTypes, phases, phaseAt, eventAt, pressureAt, bossInterval, create, player, jump, releaseJump, throwChalk, overlaps, shotImpact, step };
 })();

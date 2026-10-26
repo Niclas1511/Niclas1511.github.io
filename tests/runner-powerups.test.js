@@ -55,7 +55,8 @@ state=create();const kinds=[];
 for(let i=0;i<19;i++){
  state.obstacles=[];state.items=[];state.spawnIn=0;game.step(state,.01,()=>.8);
  if(state.items[0]?.kind==='heart'){assert(!state.obstacles.length,'heart has a safe collection route');continue;}
- if(state.items.length){kinds.push(state.items[0].kind);assert(state.items.length===2 && state.obstacles.every(o=>o.optional),'safe and risky rewards with optional upper obstacle');}
+ if(state.items.length){kinds.push(state.items[1].kind);assert(state.items.length===2 && state.obstacles.every(o=>o.optional),'safe and risky rewards with optional upper obstacle');}
 }
-assert(kinds.join(',')==='infinite,spread,shield,assistant,homing','all item types appear in cycle');
+assert(kinds.join(',')==='infinite,heart,spread,heart,shield','upper routes alternate power-ups and hearts');
+assert(state.items[0].kind==='points','lower reward is a small score pickup');
 print('Passed: item collection/misses, refresh/expiry, infinite ammo, triple trajectories, combined effects, shield collisions, scheduling and restart.');
