@@ -1,0 +1,369 @@
+// Run from the repository root: gjs games/math-run/tests/runner-ui.test.js
+const GLib = imports.gi.GLib;
+function read(path) {const [,bytes]=GLib.file_get_contents(path);return new TextDecoder().decode(bytes);}
+const MathRunner = new Function(read('games/math-run/runner-engine.js')+'; return MathRunner;')();
+const RunnerCosmetics=new Function(read('games/math-run/runner-cosmetics.js')+';return RunnerCosmetics;')();
+let currentState;
+const originalCreate=MathRunner.create;
+MathRunner.create=width=>(currentState=originalCreate(width));
+let jumpCalls=0, throwCalls=0;
+const originalJump=MathRunner.jump, originalThrow=MathRunner.throwChalk;
+MathRunner.jump=state=>{jumpCalls++;return originalJump(state);};
+MathRunner.throwChalk=state=>{throwCalls++;return originalThrow(state);};
+function assert(value,message){if(!value)throw Error(message);}
+function element(){return {events:{},textContent:'',disabled:false,hidden:false,attrs:{},
+ addEventListener(type,fn){(this.events[type] ||= []).push(fn)},
+ setAttribute(name,value){this.attrs[name]=value},focus(){document.activeElement=this;},setPointerCapture(){},
+ fire(type,event={}){for(const fn of this.events[type] || [])fn(event)}};}
+const elements={};
+const canvas=elements['#runner-canvas']=element();canvas.width=960;canvas.height=320;
+canvas.parentElement={clientWidth:440};
+canvas.getBoundingClientRect=()=>({left:10,top:20,width:canvas.width/2,height:160});
+let draws=0,renderCapture=null;const drawnText=[],drawnColors=new Set();
+canvas.getContext=()=>({fillRect(x,y,w,h){draws++;drawnColors.add(this.fillStyle);if(renderCapture)renderCapture.push({kind:"rect",x,y,w,h,color:this.fillStyle});},fillText(text,x,y,width){drawnText.push(text);if(renderCapture)renderCapture.push({kind:"text",text,x,y,width,color:this.fillStyle,font:this.font,align:this.textAlign,baseline:this.textBaseline});}});
+const document=element();document.body=element();
+document.querySelector=selector=>elements[selector] ||= element();
+const window=element();
+window.matchMedia=()=>({matches:GLib.getenv('RUNNER_TEST_REDUCED_MOTION')==='1'});
+const practiceBoss=GLib.getenv('RUNNER_TEST_BOSS');
+if(practiceBoss)window.location={search:'?boss='+practiceBoss};
+// Storage denial must not prevent play.
+const localStorage={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};
+let nextFrame=0;const callbacks=new Map();
+function requestAnimationFrame(fn){callbacks.set(++nextFrame,fn);return nextFrame;}
+function cancelAnimationFrame(id){callbacks.delete(id);}
+function advance(time){const entries=[...callbacks];callbacks.clear();for(const [,fn] of entries)fn(time);}
+let musicSkips=0, musicRestarts=0, musicMutes=0, musicBoss=false, musicRunning=false, soundMuted=false, soundUnlocked=0, soundStops=0;
+const namedOffers=[];let namedDismissals=0;
+const RunnerScores={create(){return {offer(score){namedOffers.push(score);},dismiss(){namedDismissals++;}};}};
+const playedSounds=[];
+const RunnerSound={create(){return {setMuted(value){soundMuted=value;},unlock(){soundUnlocked++;return Promise.resolve();},play(cue){playedSounds.push(cue);},stop(){soundStops++;},drain(state){playedSounds.push(...state.sounds.splice(0));}};}};
+const RunnerMusic={create(button,select,status){assert(button && select && status,'music controls connected');return {next(){musicSkips++;},restart(){musicRestarts++;},setMuted(value){musicMutes++;this.muted=value;},setBoss(value){musicBoss=value;},setRunning(value){musicRunning=value;}};}};
+eval(read('games/math-run/runner.js'));
+if(practiceBoss){
+ elements['#runner-start'].fire('click');advance(1);advance(18);
+ if(['reviewer','blackboard','printer','deadline'].includes(practiceBoss)){
+  assert(currentState.boss?.type===practiceBoss&&currentState.bossIntro,'practice enters selected boss immediately');
+  assert(currentState.lives===5&&currentState.runTime<1,'practice starts with five lives without waiting');
+ }else assert(!currentState.boss&&currentState.lives===1,'invalid practice value uses normal game');
+ if(practiceBoss!=='invalid'){
+  assert(elements['#runner-phase'].textContent.includes('training'),'training is clearly labelled');
+  currentState.over=true;advance(35);assert(!namedOffers.length,'practice cannot submit named scores');
+  elements['#runner-start'].fire('click');advance(50);advance(67);
+  assert(currentState.boss?.type===practiceBoss&&currentState.lives===5,'retry resets the selected boss and hearts');
+  const originalStep=MathRunner.step;
+  MathRunner.step=state=>{state.boss=null;};advance(84);MathRunner.step=originalStep;
+  assert(elements['#runner-overlay'].hidden===false&&elements['#runner-message'].textContent.includes('Boss defeated'),'victory ends training with a result');
+  assert(!callbacks.size&&!musicRunning&&elements['#runner-pause'].disabled,'victory stops the loop, music and pause control');
+  assert(!namedOffers.length,'training victory never offers a score');
+  elements['#runner-start'].fire('click');advance(101);advance(118);
+  assert(currentState.boss?.type===practiceBoss&&currentState.lives===5,'victory retry starts a fresh selected arena');
+ }
+ print('Passed boss practice: '+practiceBoss);imports.system.exit(0);
+}
+assert(draws>0,'initial pixel scene draws');assert(canvas.width===440,'responsive world width');
+assert(!callbacks.size,'ready screen does not animate');
+document.fire('keydown',{code:'KeyM',target:canvas,repeat:false,preventDefault(){}});
+document.fire('keydown',{code:'KeyM',target:canvas,repeat:true,preventDefault(){}});
+assert(musicMutes===1 && soundMuted,'M toggles once per press');
+document.fire('keydown',{code:'KeyM',target:{tagName:'SELECT'},repeat:false,preventDefault(){throw Error('selector key intercepted');}});
+assert(musicMutes===1 && soundMuted,'editable controls keep their own keyboard input');
+const start=elements['#runner-start'],pause=elements['#runner-pause'];
+document.fire('keydown',{code:'Space',target:canvas,repeat:false,preventDefault(){}});
+assert(elements['#runner-overlay'].hidden,'Space starts the game without a mouse');
+assert(!pause.disabled && callbacks.size===1,'starts exactly one loop');
+assert(musicRunning,'starting game starts enabled music');
+assert(soundUnlocked===1,'start gesture unlocks sound effects');
+assert(musicRestarts===1,'new run chooses a fresh starting track');
+document.fire('keydown',{code:'KeyN',target:canvas,repeat:false,preventDefault(){}});
+document.fire('keydown',{code:'KeyN',target:canvas,repeat:true,preventDefault(){}});
+assert(musicSkips===1,'N skips once per press');
+elements['#runner-next-track'].fire('click');assert(musicSkips===2,'Next button skips music');
+const key=code=>({code,target:canvas,repeat:false,preventDefault(){}});
+document.fire('keydown',key('ArrowUp'));document.fire('keydown',key('ArrowUp'));
+document.fire('keydown',{...key('ArrowUp'),repeat:true});
+assert(jumpCalls===2,'separate presses allow double jump; held key does not repeat');
+document.fire('keydown',key('KeyX'));
+document.fire('keydown',{...key('KeyX'),repeat:true});
+assert(throwCalls===1,'X throws once per press');
+advance(16);advance(32);
+assert(elements['#runner-chalk-count'].textContent==='2','chalk counter updates');
+assert(playedSounds.includes('jump')&&playedSounds.includes('doubleJump')&&playedSounds.includes('throw'),'keyboard actions play sound events');
+window.fire('blur');assert(!callbacks.size && !elements['#runner-overlay'].hidden,'blur pauses');
+assert(elements['#runner-chalk'].disabled,'chalk disabled while paused');
+assert(!musicRunning,'blur pauses music with game');
+assert(soundStops>0&&!currentState.sounds.length,'blur stops effects and clears pending cues');
+document.fire('keydown',key('KeyX'));assert(throwCalls===1,'no throws while paused');
+assert(start.textContent==='Resume','resume action');start.fire('click');
+let prevented=false;
+document.fire('keydown',{code:'KeyP',target:canvas,repeat:false,preventDefault(){prevented=true}});
+assert(prevented && !callbacks.size,'P pauses');pause.fire('click');
+assert(callbacks.size===1,'pause button resumes without duplicate loops');
+elements['#runner-chalk'].fire('pointerdown',{preventDefault(){}});
+assert(throwCalls===2,'touch chalk button connected');
+const duck=elements['#runner-duck'];duck.fire('pointerdown',{pointerId:1,preventDefault(){}});
+assert(duck.attrs['aria-pressed']==='true','touch duck held');
+duck.fire('pointercancel',{pointerId:1});assert(duck.attrs['aria-pressed']==='false','cancel releases duck');
+window.fire('blur');start.fire('click');
+for(let i=1;i<4000 && callbacks.size;i++)advance(i*1000/60);
+assert(!callbacks.size,'game stops on collision');
+assert(start.textContent==='Try again' && pause.disabled,'game over controls');
+const oldScore=Number(elements['#runner-score'].textContent);
+assert(oldScore>0 && Number(elements['#runner-best'].textContent)===oldScore,'score and best update with unavailable storage');
+document.fire('keydown',{code:'Space',target:canvas,repeat:false,preventDefault(){}});
+assert(elements['#runner-score'].textContent==='0' && callbacks.size===1,'Space restarts the game without a mouse');
+let renderTime=100000;
+for(const flyer of MathRunner.flyers){
+    currentState.obstacles=[{...flyer,x:canvas.width-120,baseY:flyer.y,age:0,speed:280}];
+    advance(renderTime+=17);
+    currentState.obstacles[0].x=canvas.width+100;
+    advance(renderTime+=17);
+    assert(drawnText.includes(flyer.label),'warning renderer covers '+flyer.kind);
+}
+for(const text of ['Quick question!','URGENT','REVIEWER 2',MathRunner.flyers[3].formula,'PSET','ABSTRACT','DUE TODAY']){
+    assert(drawnText.includes(text),'pixel motif renderer covers '+text);
+}
+currentState.obstacles=[{...MathRunner.flyers[0],x:250,baseY:176,age:0,speed:280,resolved:true}];
+advance(renderTime+=17);
+currentState.obstacles=[];
+currentState.items=MathRunner.powerupTypes.map(type=>({kind:type.kind,x:220,y:220,w:28,h:28,speed:1}));
+advance(renderTime+=17);
+assert(drawnText.includes('PICK UP') && drawnText.includes('∞') && drawnText.includes('3'),'collectible icons render');
+currentState.items.forEach(item=>item.x=78);currentState.chalk=0;
+advance(renderTime+=17);
+assert(elements['#runner-chalk-count'].textContent==='∞' && elements['#runner-chalk-capacity'].hidden,'unlimited ammo display');
+assert(!elements['#runner-chalk'].disabled,'unlimited chalk enables button at zero normal ammo');
+for(const type of MathRunner.powerupTypes)assert(elements['#runner-effects'].textContent.includes(type.label),'active effect countdown displayed');
+assert(!elements['#runner-effects'].hidden && elements['#runner-status'].textContent.includes('Espresso jump'),'pickup announcement');
+assert(!drawnText.includes('SA'),'assistant uses figure icon without initials');
+currentState.assistants[0].hurt=.5;advance(renderTime+=17);
+assert(drawnText.includes('*'),'hurt assistant shows orbiting stars');
+currentState.items=[{kind:'assistant',x:78,y:220,w:28,h:28,speed:0}];advance(renderTime+=17);
+assert(currentState.assistants.length===2 && elements['#runner-effects'].textContent.includes('×2'),'additional assistant renders with team count');
+window.fire('blur');const shieldTime=currentState.powerups.shield;
+advance(renderTime+=10000);
+assert(currentState.powerups.shield===shieldTime,'pause freezes item effects');
+start.fire('click');currentState.over=true;advance(renderTime+=17);start.fire('click');
+assert(elements['#runner-effects'].hidden && !elements['#runner-chalk-capacity'].hidden,'restart clears power-up HUD');
+const jump=elements['#runner-jump'];
+document.fire('keydown',key('ArrowUp'));
+assert(currentState.jumpHeld && currentState.jumps===1,'keyboard begins held jump');
+document.fire('keyup',{code:'ArrowUp'});
+assert(!currentState.jumpHeld && currentState.vy===-260,'keyboard release shortens rising jump');
+currentState.y=252;currentState.vy=0;currentState.jumps=0;
+jump.fire('pointerdown',{pointerId:77,preventDefault(){}});
+assert(currentState.jumpHeld && currentState.jumps===1,'touch press begins held jump');
+jump.fire('pointercancel',{pointerId:77});assert(!currentState.jumpHeld,'touch cancellation releases jump');
+currentState.y=252;currentState.vy=0;currentState.jumps=0;
+jump.fire('keydown',{code:'Enter',repeat:false,preventDefault(){},stopPropagation(){}});
+assert(currentState.jumpHeld,'focused jump button supports held Enter');
+jump.fire('keyup',{code:'Enter',preventDefault(){},stopPropagation(){}});
+assert(!currentState.jumpHeld,'focused button release shortens jump');
+currentState.y=252;currentState.vy=0;currentState.jumps=0;
+currentState.time=6.1;currentState.runTime=6.1;currentState.spawnIn=Infinity;currentState.nextBossAt=Infinity;
+advance(renderTime+=17);advance(renderTime+=17);
+assert(elements['#runner-event'].textContent.includes('Office hours incoming'),'event warning shown');
+currentState.time=9;currentState.runTime=9;advance(renderTime+=17);
+assert(elements['#runner-event'].textContent.includes('Office hours') && !elements['#runner-event'].textContent.includes('incoming'),'active event shown');
+currentState.time=49;currentState.runTime=49;currentState.multiplier=3;advance(renderTime+=17);
+assert(elements['#runner-phase'].textContent==='Conference' && elements['#runner-combo'].textContent==='×3','phase and combo HUD');
+currentState.obstacles=[{kind:'paperplane',x:230,y:160,w:48,h:30,speed:1,resolved:true,resolvedAt:currentState.time},
+ {kind:'comment',x:320,y:132,w:62,h:28,speed:1,band:2}];
+currentState.boss={kind:'boss',x:332,y:192,w:88,h:30,hp:4,maxHp:6,age:0,attackIn:.6,pattern:0};
+advance(renderTime+=17);
+assert(drawnText.includes('Solved!') && drawnText.includes('TARGET LOCK'),'folding paper and boss telegraph render');
+assert(elements['#runner-event'].textContent.includes('4/6 comments left'),'boss health HUD');
+assert(musicBoss,'boss arena selects dramatic music');
+window.fire('blur');const bossAge=currentState.boss.age;advance(renderTime+=10000);
+assert(currentState.boss.age===bossAge,'pause freezes boss and event progression');
+start.fire('click');advance(renderTime+=17);
+assert(!elements['#runner-arena-controls'].hidden && !elements['#runner-left'].disabled,'arena movement controls visible and enabled');
+const beforeMove=currentState.x;
+document.fire('keydown',key('KeyD'));advance(renderTime+=30);
+assert(currentState.x>beforeMove,'D moves player in arena');
+document.fire('keyup',{code:'KeyD'});assert(currentState.move===0,'keyup stops walking');
+const left=elements['#runner-left'];left.fire('pointerdown',{pointerId:92,preventDefault(){}});
+assert(currentState.move===-1,'touch left button moves left');
+left.fire('pointercancel',{pointerId:92});assert(currentState.move===0,'touch cancellation releases movement');
+assert(elements['#runner-controls-hint'].textContent==='Boss: ← / → move · Space jump · ↓ duck / fast fall · X throw · Jump to aim · M mute · N next track · S skip','arena advertises movement, jump, duck and throw');
+assert(!elements['#runner-duck'].hidden&&!elements['#runner-duck'].disabled,'duck remains available in boss fight');
+document.fire('keydown',key('ArrowDown'));assert(currentState.duck,'Down ducks in boss mode');
+document.fire('keyup',{code:'ArrowDown'});assert(!currentState.duck,'release restores standing');
+const throwsBeforePointer=throwCalls, automaticTarget=currentState.aim;
+canvas.fire('pointermove',{clientX:140,clientY:65});
+canvas.fire('pointerdown',{clientX:140,clientY:65,button:0,pointerType:'mouse',preventDefault(){}});
+assert(throwCalls===throwsBeforePointer && currentState.aim===automaticTarget,'mouse has no aiming or shooting role');
+currentState.cooldown=0;currentState.chalk=3;currentState.shots=[];currentState.volleys=[];
+document.fire('keydown',key('KeyX'));
+assert(currentState.shots.length===1 && Math.abs(currentState.shots[0].vy)<1e-9,'X throws horizontally at chosen jump height');
+const automaticAngle=currentState.aimAngle;
+document.fire('keydown',key('KeyW'));
+assert(currentState.aimAngle===automaticAngle && !currentState.aim,'extra aiming keys do not change facing');
+document.fire('keydown',key('Space'));
+assert(currentState.jumps===1 && currentState.jumpHeld,'Space jumps in arena');
+document.fire('keyup',{code:'Space'});
+document.fire('keydown',key('KeyD'));window.fire('blur');
+assert(currentState.move===0 && elements['#runner-left'].disabled,'pause clears walking and disables arena controls');
+start.fire('click');currentState.boss.hp=1;currentState.boss.attackIn=Infinity;
+// Force only the last projectile collision here; engine tests exercise full aiming.
+currentState.shots=[{x:currentState.boss.x-1,y:currentState.boss.y+10,w:10,h:4,vx:560,vy:0}];
+advance(renderTime+=17);advance(renderTime+=17);
+assert(!currentState.boss && elements['#runner-arena-controls'].hidden && !elements['#runner-duck'].hidden,'victory restores normal runner controls');
+assert(currentState.x===76 && currentState.move===0,'normal runner restores fixed left position');
+assert(!musicBoss,'victory restores classical music');
+currentState.streak=9;currentState.multiplier=5;currentState.cooldown=0;currentState.shots=[];currentState.volleys=[];
+currentState.obstacles=[{x:180,y:214,w:35,h:12,speed:1,band:1,variant:0}];currentState.spawnIn=Infinity;
+document.fire('keydown',key('KeyX'));
+for(let i=0;i<12;i++)advance(renderTime+=17);
+assert(currentState.hagoromo===1 && elements['#runner-effects'].textContent.includes('Hagoromo'),'ten-hit reward shown in HUD');
+assert(elements['#runner-combo'].textContent==='×10 · 10 hits' && elements['#runner-status'].textContent.includes('Hagoromo'),'uncapped multiplier, streak count and reward announcement');
+currentState.chalk=0;currentState.cooldown=0;currentState.obstacles=[];
+advance(renderTime+=17);assert(!elements['#runner-chalk'].disabled,'earned reward enables throw button at zero ammo');
+document.fire('keydown',key('KeyX'));advance(renderTime+=17);
+assert(currentState.shots[0].giant && drawnText.includes('Hagoromo'),'thick projectile carries the requested lettering');
+currentState.obstacles=[{x:currentState.shots[0].x+89,y:214,w:35,h:12,speed:1,band:1,variant:0}];
+advance(renderTime+=17);
+assert(currentState.explosions.length===1,'impact renders the explosion');
+window.fire('blur');const blastAge=currentState.explosions[0].age;advance(renderTime+=1000);
+assert(currentState.explosions[0].age===blastAge,'pause freezes explosion animation');
+start.fire('click');currentState.over=true;advance(renderTime+=17);start.fire('click');
+assert(!currentState.hagoromo && !currentState.explosions.length,'restart clears giant chalk and its animation');
+currentState.boss={kind:'boss',x:300,y:150,w:88,h:30,hp:6,maxHp:6,age:0,attackIn:2.4,pattern:0};
+currentState.bossIntro={age:.4,duration:2.4,impact:false};advance(renderTime+=17);
+assert(drawnText.includes('BOSS ENCOUNTER')&&drawnText.includes('Your proof is under review.'),'cinematic warning and title render');
+assert(elements['#runner-jump'].disabled&&elements['#runner-chalk'].disabled&&!pause.disabled,'intro disables gameplay but keeps pause available');
+window.fire('blur');const cinematicAge=currentState.bossIntro.age;advance(renderTime+=1000);
+assert(currentState.bossIntro.age===cinematicAge,'pause freezes cinematic');
+start.fire('click');assert(elements['#runner-jump'].disabled,'resuming intro keeps gameplay disabled');
+currentState.bossIntro.age=1.2;advance(renderTime+=17);
+assert(drawnText.includes('REVISE. RESUBMIT. SURVIVE.'),'impact changes cinematic subtitle');
+for(let i=0;i<90;i++)advance(renderTime+=17);
+assert(!currentState.bossIntro&&!elements['#runner-jump'].disabled,'cinematic restores gameplay controls');
+for(const selector of ['#runner-sound','#runner-music','#runner-mute']) {
+ const button=elements[selector];button.focus();button.fire('click',{detail:1});
+ assert(document.activeElement===canvas,'audio toggle returns focus to game');
+ const before=throwCalls;document.fire('keydown',{...key('KeyX'),target:document.activeElement});
+ assert(throwCalls===before+1 && callbacks.size===1,'keyboard chalk works immediately after audio toggle');
+ window.fire('blur');button.focus();button.fire('click',{detail:0});
+ assert(document.activeElement===canvas,'keyboard activation also returns focus while paused');
+ document.fire('keydown',{...key('KeyP'),target:document.activeElement});
+ assert(elements['#runner-overlay'].hidden,'P resumes after toggling audio during pause');
+}
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];
+currentState.lives=2;currentState.hurt=1;currentState.items=[{kind:'heart',x:78,y:220,w:28,h:28,speed:0}];
+currentState.y=252;currentState.vy=0;currentState.x=76;advance(renderTime+=17);advance(renderTime+=17);
+assert(currentState.lives===3 && elements['#runner-lives'].textContent==='♥♥♥♡♡','collected pixel heart updates lives display');
+assert(elements['#runner-lives'].attrs['aria-label']==='3 of 5 lives','health display has accessible count');
+currentState.boss={kind:'boss',type:'blackboard',name:'The Blackboard',x:270,y:100,w:122,h:76,hp:8,maxHp:8,age:0,cycle:.4,pattern:0};
+currentState.bossIntro={age:.4,duration:2.4,impact:false};advance(renderTime+=17);
+assert(drawnText.includes('THE BLACKBOARD')&&drawnText.includes('The graphs are coming alive.'),'Blackboard has its own cinematic title');
+currentState.bossIntro=null;currentState.boss.cycle=1.3;advance(renderTime+=17);
+assert(drawnText.includes('HIT THE ERASER')&&elements['#runner-event'].textContent.includes('The Blackboard'),'board and weak point use correct UI');
+assert(drawnText.includes('x²'),'parabola graph renders as math');
+currentState.boss={kind:'boss',type:'printer',name:'The Printer',x:280,y:166,w:124,h:80,hp:8,maxHp:8,age:0,cycle:1.3,pattern:0,jamAt:3.6,sheetsFired:true,jammed:false};
+currentState.bossIntro=null;currentState.enemyShots=[];currentState.items=[];currentState.powerups.shield=100;advance(renderTime+=17);
+assert(drawnText.includes('THE PRINTER')&&drawnText.includes('FEED OPEN'),'Printer renders its open feed');
+elements['#runner-duck'].fire('pointerdown',{pointerId:71,preventDefault(){}});
+assert(currentState.duck,'touch duck works in arena');
+elements['#runner-left'].fire('pointerdown',{pointerId:72,preventDefault(){}});
+assert(currentState.move===-1&&currentState.duck,'moving and ducking can be held with separate touches');
+elements['#runner-duck'].fire('pointercancel',{pointerId:71});elements['#runner-left'].fire('pointerup',{pointerId:72});
+assert(!currentState.duck&&!currentState.move,'cancel/release clear mobile direction inputs');
+currentState.boss=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];currentState.powerups.infinite=0;currentState.hagoromo=0;advance(renderTime+=17);currentState.chalk=3;currentState.cooldown=0;
+elements['#runner-chalk'].fire('pointerdown',{pointerId:73,preventDefault(){}});
+for(let i=0;i<44;i++)advance(renderTime+=17);
+assert(currentState.chalk===0,'holding Chalk fires repeated volleys using normal ammo');
+elements['#runner-chalk'].fire('lostpointercapture',{pointerId:73});const afterRelease=throwCalls;
+for(let i=0;i<25;i++)advance(renderTime+=17);
+assert(throwCalls===afterRelease,'lost capture stops repeated mobile throws');
+assert(namedOffers.length>0&&namedDismissals>0,'game over offers named score and new runs dismiss it');
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.enemyShots=[];currentState.obstacles=[{x:260,y:192,w:62,h:28,band:1,variant:0,hp:2,maxHp:3,armor:'report',speed:1}];
+currentState.items=[{x:180,y:220,w:28,h:28,kind:'points',points:10,route:22,speed:1},{x:180,y:86,w:28,h:28,kind:'heart',route:22,risky:true,speed:1}];advance(renderTime+=17);
+assert(drawnText.includes('REPORT')&&drawnText.includes('SAFE +10')&&drawnText.includes('HIGH REWARD'),'armored tiles and exclusive route labels render');
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];
+currentState.x=76;currentState.y=252;currentState.vy=0;currentState.duck=false;currentState.jumps=0;
+currentState.items=[{kind:'espresso',x:78,y:220,w:28,h:28,speed:0}];advance(renderTime+=17);
+assert(currentState.espressoSip>0&&drawnText.includes('ZIP!'),'coffee pickup animates its smiling cup');
+MathRunner.jump(currentState);MathRunner.jump(currentState);MathRunner.jump(currentState);advance(renderTime+=17);
+assert(drawnText.includes('PFFT!')&&currentState.espressoPuffs.length,'third jump renders funny steam cloud');
+window.fire('blur');const puffAge=currentState.espressoPuffs[0].age;advance(renderTime+=1000);
+assert(currentState.espressoPuffs[0].age===puffAge,'pause freezes funny coffee animation');
+start.fire('click');currentState.boss={kind:'boss',type:'deadline',name:'The Deadline',x:260,y:94,w:104,h:104,hp:3,maxHp:10,age:0,slow:.5,hitFlash:0,handAngle:1,attackIn:.5,pattern:0};
+currentState.bossIntro=null;currentState.obstacles=[];currentState.enemyShots=[];advance(renderTime+=17);
+assert(drawnText.includes('THE DEADLINE')&&drawnText.includes('TIME OUT…'),'clock boss and slowdown render');
+currentState.boss.slow=0;advance(renderTime+=17);assert(drawnText.includes('TICK! TOCK!'),'panic animation uses unique caption');
+currentState.deadlineShatter={x:300,y:145,age:0};advance(renderTime+=17);
+assert(drawnText.includes('DEADLINE EXTENDED!'),'victory shatter renders gears and caption');
+print('Passed: initial render, responsive sizing, start, pause/resume, blur, touch release, game over, score persistence fallback and restart.');
+
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.obstacles=[];currentState.enemyShots=[];currentState.items=[];
+document.fire('keydown',{code:'ArrowRight',target:canvas,repeat:false,preventDefault(){}});
+assert(currentState.boost,'right arrow enables runner acceleration');
+document.fire('keyup',{code:'ArrowRight',target:canvas});
+assert(!currentState.boost,'releasing right arrow ends acceleration');
+document.fire('keydown',{code:'ArrowRight',target:canvas,repeat:false,preventDefault(){}});
+window.fire('blur');assert(!currentState.boost,'focus loss clears acceleration');
+start.fire('click');
+drawnText.length=0;
+currentState.obstacles=['books','archive','exams','blackboard'].map((falling,i)=>({falling,x:170+i*65,y:80,w:44,h:30,band:0,variant:0,speed:1,dropFrom:32,dropLead:1,dropDuration:.3,baseY:222,sequenceLead:true,label:'DUCK → JUMP'}));
+advance(renderTime+=17);
+assert(!drawnText.includes('DUCK → JUMP')&&!drawnText.includes('FALLING · JUMP'),'obstacles do not display combination instructions');
+assert(drawnText.includes('EXAM')&&drawnText.includes('x²'),'exam papers and falling blackboard have distinct markings');
+print('Passed: hold/release/focus-reset acceleration and distinct falling visuals without combination labels.');
+
+currentState.boss=null;currentState.bossIntro=null;currentState.runTime=52;currentState.nextBossAt=60;currentState.spawnIn=Infinity;
+currentState.obstacles=[];currentState.enemyShots=[];currentState.items=[];currentState.powerups.shield=100;
+drawnText.length=0;advance(renderTime+=17);
+assert(drawnText.includes('PRESSURE RISING · 8s'),'combined pressure indicator renders remaining seconds');
+assert(!drawnText.includes('DEADLINE'),'no competing countdown caption');
+currentState.nextBossAt=currentState.runTime;advance(renderTime+=17);
+assert(currentState.bossIntro&&!musicRunning,'boss entry briefly silences music');
+for(let i=0;i<42;i++)advance(renderTime+=17);
+assert(musicRunning,'boss theme resumes after the brief silence');
+print('Passed: deadline countdown and quiet boss entrance with theme restoration.');
+
+pause.fire('click');const winsBeforeSkip=currentState.bossWins;
+document.fire('keydown',key('KeyS'));
+assert(!currentState.boss&&!currentState.bossIntro&&currentState.bossWins===winsBeforeSkip+1,'S shortcut advances to next semester');
+assert(!musicRunning&&!callbacks.size,'S skip while paused preserves pause');
+const skippedTime=currentState.runTime;
+document.fire('keydown',{...key('KeyS'),repeat:true});assert(currentState.runTime===skippedTime,'holding S does not skip multiple phases');
+document.fire('keydown',{...key('KeyS'),target:{tagName:'INPUT'}});assert(currentState.runTime===skippedTime,'typing S in an input does not skip');
+print('Passed: S skip shortcut and paused-state preservation.');
+
+start.fire('click');currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.spawnIn=Infinity;currentState.obstacles=[];currentState.enemyShots=[];
+for(const kind of ['professor','paperPrinter']){
+ currentState.attackers=[{kind,age:.1,life:10}];advance(renderTime+=17);
+}
+assert(drawnText.includes('PROFESSOR')&&drawnText.includes('PAPER JAM!'),'new rivals render distinct identities');
+currentState.items=[{kind:'infinite',x:240,y:86,w:28,h:28,speed:0,route:2,risky:true,riskBonus:50}];advance(renderTime+=17);
+assert(drawnText.includes('RISK +50 / POWER'),'expert route advertises greater reward');
+print('Passed: new rival visuals and expert reward label.');
+
+currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.spawnIn=Infinity;currentState.obstacles=[];currentState.items=[];currentState.attackers=[];
+for(const wins of [1,3,6,8])for(const duck of [false,true]){
+ currentState.bossWins=wins;currentState.y=252;currentState.vy=0;currentState.duck=duck;
+ const before=MathRunner.player(currentState);drawnColors.clear();advance(renderTime+=17);
+ const after=MathRunner.player(currentState);
+ assert(before.w===after.w&&before.h===after.h,'age does not change collision dimensions');
+ assert(drawnColors.has(wins>=6?'#c7cbd0':wins>=3&&!duck?'#8b8078':'#604d43'),'visible beard ages while standing and ducking');
+ if(wins>=6)assert(drawnColors.has('#b6bdc4'),'older student has gray hair');
+}
+print('Passed: age progression, gray hair, standing/ducking beards and unchanged hitboxes.');
+
+if(GLib.getenv('RUNNER_COSMETICS_PREVIEW')){
+ start.fire('click');
+ const scenes=[];
+ currentState.deadlineShatter=null;currentState.explosions=[];currentState.impacts=[];
+ currentState.boss=null;currentState.bossIntro=null;currentState.nextBossAt=Infinity;currentState.spawnIn=Infinity;currentState.over=false;
+ currentState.obstacles=[];currentState.enemyShots=[];currentState.items=[];currentState.attackers=[];currentState.assistants=[];currentState.particles=[];currentState.popups=[];currentState.shots=[];currentState.volleys=[];currentState.espressoPuffs=[];
+ for(const key of Object.keys(currentState.powerups))currentState.powerups[key]=0;
+ for(const wins of [0,2,5,9,15,24,40]){
+  currentState.bossWins=wins;currentState.y=252;currentState.vy=0;currentState.duck=false;currentState.hurt=0;currentState.facing=1;currentState.boost=false;currentState.espressoSip=0;currentState.espressoBoost=0;currentState.throwFlash=0;
+  currentState.trophies=['reviewer','blackboard','printer','deadline'].slice(0,Math.min(4,wins));
+  currentState.semesterAnnounced=wins;currentState.popups=[];
+  renderCapture=[];advance(renderTime+=17);
+  scenes.push({wins,profile:RunnerCosmetics.profileAt(wins),width:canvas.width,height:canvas.height,ops:renderCapture});renderCapture=null;
+ }
+ GLib.file_set_contents(GLib.getenv('RUNNER_COSMETICS_PREVIEW'),JSON.stringify(scenes));
+}

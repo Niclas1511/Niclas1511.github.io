@@ -194,12 +194,15 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
                          f'<link rel="stylesheet" href="memory.css?v={memory_css_version}">'
                          f'<script src="memory.js?v={memory_version}" defer></script>')
     if stem == "runner":
-        memory_assets = "\n".join(
-            f'<link rel="stylesheet" href="runner.css?v={sha256((ROOT / "runner.css").read_bytes()).hexdigest()[:12]}">'
-            if asset == "runner.css" else
-            f'<script defer src="{asset}?v={sha256((ROOT / asset).read_bytes()).hexdigest()[:12]}"></script>'
-            for asset in ("runner.css", "runner-engine.js", "runner-music.js", "runner-sound.js", "runner-scores.js", "runner.js")
-        )
+        game_assets = ("runner.css", "runner-engine.js", "runner-music.js", "runner-sound.js",
+                       "runner-scores.js", "runner-cosmetics.js", "runner.js", "runner-lookbook.js")
+        tags = []
+        for name in game_assets:
+            asset = f"games/math-run/{name}"
+            version = sha256((ROOT / asset).read_bytes()).hexdigest()[:12]
+            tags.append(f'<link rel="stylesheet" href="{asset}?v={version}">' if name.endswith(".css")
+                        else f'<script defer src="{asset}?v={version}"></script>')
+        memory_assets = "\n".join(tags)
     return f'''<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -245,7 +248,7 @@ def render_page(metadata: dict[str, str], stem: str, body: str) -> str:
 def main() -> int:
     # Render all sources before writing so invalid metadata leaves outputs intact.
     outputs = []
-    for path in sorted(PAGES_DIR.glob("*.md")):
+    for path in sorted([*PAGES_DIR.glob("*.md"), ROOT / "games" / "math-run" / "runner.md"]):
         metadata, source = read_page(path)
         body = markdown.markdown(source, extensions=["extra", "sane_lists", "attr_list"], output_format="html")
         target = ROOT / "masters-thesis" / "index.html" if path.stem == "masters-thesis" else ROOT / f"{path.stem}.html"

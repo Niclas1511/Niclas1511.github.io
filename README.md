@@ -8,9 +8,9 @@ All page content lives in Markdown files:
 
 - `pages/index.md`: profile, travels/conferences (Activities), and contact details.
 - `pages/teaching.md`: teaching activities.
-- `pages/runner.md`: Math Run, a canvas pixel runner with three obstacle heights.
-  `runner-engine.js` handles physics and collisions; `runner.js` draws the scene
-  and handles keyboard/touch controls. `runner.css` styles the page. Everything
+- `games/math-run/runner.md`: Math Run, a canvas pixel runner with three obstacle heights.
+  `games/math-run/runner-engine.js` handles physics and collisions; `games/math-run/runner.js` draws the scene
+  and handles keyboard/touch controls. `games/math-run/runner.css` styles the page. Everything
   runs locally in the browser, including an optional best score in local storage.
   Hold Space/Up for a full jump, release for a short hop; two jumps are available
   before landing, with a 120 ms buffer when both have been used. Down ducks or accelerates descent.
@@ -25,7 +25,7 @@ All page content lives in Markdown files:
   boss damage. The blast cannot harm the player or collectibles. Each blast is
   still one volley for combo progress. Earned charges survive a later miss and
   arena transitions; restarting clears them. Algebra and
-  PhD-themed motifs are defined in `MathRunner.motifs` in `runner-engine.js`.
+  PhD-themed motifs are defined in `MathRunner.motifs` in `games/math-run/runner-engine.js`.
   Six flying motifs add students with questions, urgent emails, Reviewer 2's pen,
   epsilon chased by delta, falling problem sheets, and conference invitations.
   Each flyer has an advance warning at the right edge. A chalk hit anywhere on a
@@ -138,21 +138,21 @@ http://localhost:8000.
 
 Run the Memory logic checks with `gjs tests/memory.test.js` (requires GJS).
 They cover duplicate answers, invalid pairs, completion, restart, and shuffled rounds.
-Run the runner checks with `gjs tests/runner.test.js` and
-`gjs tests/runner-ui.test.js`. These cover obstacle heights, collisions, spacing,
+Run the runner checks with `gjs games/math-run/tests/runner.test.js` and
+`gjs games/math-run/tests/runner-ui.test.js`. These cover obstacle heights, collisions, spacing,
 mobile reaction time, controls, pause/resume, and restart. The UI check uses a
 mock canvas and DOM; it does not replace a visual browser check.
-`gjs tests/runner-flyers.test.js` checks every flying type across screen widths,
+`gjs games/math-run/tests/runner-flyers.test.js` checks every flying type across screen widths,
 speeds and frame rates, plus warnings, student interactions, and arrival spacing.
-`gjs tests/runner-powerups.test.js` checks collection, effect expiry, combined
+`gjs games/math-run/tests/runner-powerups.test.js` checks collection, effect expiry, combined
 effects, spread-shot collisions, shields, ammo rules, and collectible scheduling.
-`gjs tests/runner-progression.test.js` covers variable jumping and buffering,
+`gjs games/math-run/tests/runner-progression.test.js` covers variable jumping and buffering,
 combo settlement order, near-miss rewards, reactions, phase/event patterns, both
 reward routes.
-`gjs tests/runner-arena.test.js` checks recurring arenas, frozen runner clocks,
+`gjs games/math-run/tests/runner-arena.test.js` checks recurring arenas, frozen runner clocks,
 free movement, screen boundaries, automatic/spread throws in both directions, ammo,
 attack dodge routes and victories at 30/60/120 FPS, and return to the runner.
-`gjs tests/runner-hagoromo.test.js` checks ten-hit rewards, giant throws,
+`gjs games/math-run/tests/runner-hagoromo.test.js` checks ten-hit rewards, giant throws,
 blast range, damage and safe targets, finite ammo, fuse/animation cleanup,
 combo counting and arena-transition refunds.
 
@@ -169,16 +169,16 @@ redirect at a hosting/proxy layer that supports HTTP redirects. Do not simply
 delete `masters-thesis/index.html`. The canonical URL and citation examples should
 continue to identify the permanent address.
 
-Music: `assets/music/` contains complete public-domain Mutopia MIDI editions of
+Music: `games/math-run/music/` contains complete public-domain Mutopia MIDI editions of
 Mozart’s Rondo alla Turca and Bach’s Prelude in C major (BWV 846), plus a MIDI
 conversion of a CC0 edition of Liszt’s Liebestraum No. 3, with provenance
-in `assets/music/README.md`. `runner-music.js` reads the MIDI tempo map and plays
+in `games/math-run/music/README.md`. `games/math-run/runner-music.js` reads the MIDI tempo map and plays
 local files as square/triangle chiptune voices using Web Audio, without a soundfont
 or runtime dependencies. Music defaults on and starts with the game, rotates Liszt → Mozart → Bach Prelude → Italian Concerto I → Italian Concerto II, and pauses on
-game pause, game over, or loss of focus. M mutes/unmutes all music and effects; it never plays on the ready screen. Run `gjs tests/runner-music.test.js` for
+game pause, game over, or loss of focus. M mutes/unmutes all music and effects; it never plays on the ready screen. Run `gjs games/math-run/tests/runner-music.test.js` for
 MIDI parsing and mocked audio lifecycle checks.
 
-`runner-sound.js` provides short, synthesized action effects independently of music.
+`games/math-run/runner-sound.js` provides short, synthesized action effects independently of music.
 Sound is enabled by default but its AudioContext opens only on Start or the Sound
 button. Effects cover jumps, double jumps, landing, duck/fast fall, chalk variants,
 hits and reactions, homing dives/impacts, Hagoromo explosions, pickups,
@@ -187,10 +187,10 @@ boss entry/attacks/hits/victory, and game over. Ordinary combo increments and
 notification messages stay silent.
 The Sound toggle mutes all effects; pause and focus loss cancel active voices and
 pending gameplay cues. Identical cues are throttled and at most 20 voices play
-at once. `gjs tests/runner-sound.test.js` checks audio scheduling and game events
+at once. `gjs games/math-run/tests/runner-sound.test.js` checks audio scheduling and game events
 using a mocked AudioContext; actual browser listening remains a manual check.
 
-Boss arenas automatically switch enabled music to `assets/music/reviewer-2-boss.mid`,
+Boss arenas automatically switch enabled music to `games/math-run/music/reviewer-2-boss.mid`,
 an original 160 BPM D-minor battle cue with driving bass and rapid arpeggios.
 After victory the selected classical track resumes from its previous position.
 The boss theme obeys the same music toggle, pause, and focus-loss behavior.
@@ -206,7 +206,7 @@ Walk-through collection restores one life; chalk cannot collect hearts.
 Obstacle or boss-shot damage costs one life and grants 1.5 seconds of blinking
 recovery protection shared by all hazards. Shields preserve health. Lives carry
 into/out of boss arenas; only zero hearts ends the game. Restart resets health.
-`gjs tests/runner-hearts.test.js` checks health, collection, recovery, shields,
+`gjs games/math-run/tests/runner-hearts.test.js` checks health, collection, recovery, shields,
 cinematic freezes and boss projectiles at 30/60/120 FPS.
 
 Reviewer 2 → The Blackboard → The Printer → The Deadline rotate between boss encounters. Blackboard draws
@@ -214,10 +214,10 @@ for 1.2 seconds, then launches a bouncing parabola or low sine-wave projectile
 and exposes its eraser for 3.6 seconds. The board panel stays armored; only the
 eraser takes damage (8 HP, 3 damage from Hagoromo). Homing targets the exposed
 eraser. Assistants can intercept graph projectiles. Boss name, health, intro and
-renderer adapt to the encounter. `gjs tests/runner-blackboard.test.js` checks
+renderer adapt to the encounter. `gjs games/math-run/tests/runner-blackboard.test.js` checks
 armor, weak points, attack paths, power-ups, victories and single-life dodge routes.
 The two Italian Concerto MIDIs are unmodified CC BY-SA 3.0 Mutopia files with
-credits/license links in the game's help and `assets/music/README.md`.
+credits/license links in the game's help and `games/math-run/music/README.md`.
 
 Each new run starts with a uniformly random classical track from the MIDI collection, from the beginning. The boss theme is excluded from this selection. N or Next skips
 to the next classical track without changing mute/pause settings. Boss themes
@@ -233,7 +233,7 @@ Blackboard changes between y=100/156/72/128 during drawing, with smooth vertical
 travel and stable exposed-eraser windows. Printer has a duckable sheet at y=211,
 a temporary exposed feed, and a jumpable paper-jam wave. A feed hit advances the
 jam to 0.65 seconds after impact, making each attack require a follow-up dodge.
-The third arena is Printer, followed by Deadline and then Reviewer 2 again. `gjs tests/runner-printer.test.js`
+The third arena is Printer, followed by Deadline and then Reviewer 2 again. `gjs games/math-run/tests/runner-printer.test.js`
 checks armor/feed windows, duck/jump routes, special chalk and finite-ammo wins.
 Tor₁ was replaced with Gal(K/F) in the obstacle pool.
 
@@ -247,7 +247,7 @@ Direct boss practice URLs: `runner.html?boss=reviewer`, `?boss=blackboard`, or
 `?boss=printer`, plus `?boss=deadline`. Press Start to enter the chosen arena immediately, with five
 hearts and the usual introduction. Practice scores never update the saved best.
 Invalid boss names use the regular game. To verify URL handling, run
-`RUNNER_TEST_BOSS=printer gjs tests/runner-ui.test.js` (also reviewer/blackboard/invalid).
+`RUNNER_TEST_BOSS=printer gjs games/math-run/tests/runner-ui.test.js` (also reviewer/blackboard/invalid).
 
 Runner challenge progression: from 12 seconds onward, curated duck/jump groups
 occasionally replace a single hazard. Exam season uses denser three-step groups;
@@ -263,17 +263,17 @@ chalk removes one HP; every damaging volley counts toward combo progress.
 Hagoromo, shields and assistants still clear a whole obstacle in one encounter.
 Reward pairs offer 10 points below or a double-jump-height reward above,
 with upper hearts alternating with power-ups. The original standalone healing
-heart encounters remain available. `gjs tests/runner-challenges.test.js` verifies
+heart encounters remain available. `gjs games/math-run/tests/runner-challenges.test.js` verifies
 real scheduler groups, one-life routes at multiple speeds/frame rates, armor,
 special clears, and independent reward collection/physical reachability.
 
-Optional named leaderboard: `runner-scores.js` stores the local top 10 under
+Optional named leaderboard: `games/math-run/runner-scores.js` stores the local top 10 under
 `niederdrenk-math-run-scores-v1`. After a normal Game Over, Save score accepts a
 name (20 characters maximum); Skip and starting again store nothing. Names are
 compared case-insensitively and only a higher personal score replaces an entry.
 Scores include a date, are rendered as text, and never leave the browser. Practice
 mode cannot submit scores. Storage errors are reported without interrupting play.
-`gjs tests/runner-scores.test.js` covers persistence, validation, optional saving,
+`gjs games/math-run/tests/runner-scores.test.js` covers persistence, validation, optional saving,
 ranking, Unicode, safe rendering and unavailable storage.
 
 Espresso jump: the harmless coffee-cup pickup grants a third jump for 10 seconds,
@@ -283,7 +283,7 @@ reset the used-jump counter; mid-air expiry prevents further extra jumps until
 landing. The old coffee obstacle is now an 8 AM alarm clock. Upper reward branches
 advance the power-up cycle only when they offer an effect rather than a heart,
 so all six power-up types (including Espresso) remain reachable in the rotation.
-`gjs tests/runner-espresso.test.js` covers these rules.
+`gjs games/math-run/tests/runner-espresso.test.js` covers these rules.
 
 Espresso animation adds a brief caffeine shiver, a hopping/winking cup with a
 “ZIP!” caption on pickup, and stretch/steam jets with a “PFFT!” cloud on the
@@ -299,7 +299,7 @@ toward the player. At 3 HP its hand speed rises from 170 to 220 and attack inter
 fall from 2.8 to 1.7 seconds. Animated gears, clock hands, pendulum, color changes,
 and a one-second gear-shatter finale use the existing pixel renderer. Reduced
 motion removes decorative wobble/rotation. Practice: `runner.html?boss=deadline`.
-`gjs tests/runner-deadline.test.js` covers slow timing, both dodge routes, panic,
+`gjs games/math-run/tests/runner-deadline.test.js` covers slow timing, both dodge routes, panic,
 special chalk, finite-ammo victory, rotation and animation cleanup.
 
 Upper route rewards arrive 0.35 seconds before the ground token, allowing a
@@ -310,3 +310,9 @@ Boss training is available below the canvas: choose any of the four bosses to
 start with five hearts. Training ends on victory and offers a retry; scores are
 excluded from both the personal best and local leaderboard. Return to the full
 semester via the training panel. Existing `?boss=` practice links remain supported.
+
+The classical playlist now contains ten tracks, including four additional Bach
+WTC preludes (BWV 847, 848, 870, 871) and Beethoven's Pathétique finale (Op. 13,
+movement III). The five new files are unmodified public-domain Mutopia editions;
+source and edition credits are in `games/math-run/music/README.md`. All ten participate
+in random starts, manual selection, Next/N and automatic playlist rotation.

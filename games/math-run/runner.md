@@ -1,0 +1,96 @@
+---
+title: Math Run
+lang: en
+---
+
+<div class="runner-toolbar">
+    <div class="runner-scores"><span>Lives <strong id="runner-lives" aria-label="1 of 5 lives">♥♡♡♡♡</strong></span><span>Score <strong id="runner-score">0</strong></span><span>Best <strong id="runner-best">0</strong></span><span>Combo <strong id="runner-combo">×1</strong></span><span id="runner-career">Semester 1 · Student</span><span id="runner-phase">Lecture week</span><span>Chalk <strong id="runner-chalk-count">3</strong><span id="runner-chalk-capacity">/3</span></span></div>
+    <button id="runner-pause" type="button" disabled>Pause</button>
+</div>
+<div class="runner-messages">
+    <p id="runner-event" class="runner-event" hidden></p>
+    <p id="runner-effects" class="runner-effects" hidden></p>
+</div>
+<div class="runner-stage">
+    <canvas id="runner-canvas" width="960" height="320" tabindex="0" aria-label="Math Run. Jump over low obstacles, duck under middle obstacles, and stay low when high obstacles pass. Hold Space or Up to jump higher; release for a short hop. Press again to double jump. Down to duck or fast fall. X to throw chalk at your current height. Three pieces; one recharges every four seconds. P to pause. M to mute or unmute all game audio. Boss arena: Left/Right moves, Space jumps, X throws. Throws follow your facing direction; jump to aim at boss height.">A pixel runner game. Please use a browser that supports canvas.</canvas>
+    <div id="runner-touch-controls" class="runner-touch-controls" data-arena="false" role="group" aria-label="Touch game controls">
+        <div class="runner-direction-controls">
+            <div id="runner-arena-controls" class="runner-arena-controls" hidden><button id="runner-left" type="button" disabled aria-label="Move left">←</button><button id="runner-right" type="button" disabled aria-label="Move right">→</button></div>
+            <button id="runner-duck" type="button" disabled aria-label="Hold to duck or fall faster">↓<span>Duck</span></button>
+        </div>
+        <div class="runner-primary-controls">
+            <button id="runner-chalk" type="button" disabled aria-label="Hold to throw chalk repeatedly">✦<span>Chalk</span></button>
+            <button id="runner-jump" type="button" disabled aria-label="Hold to jump higher; press twice to double jump">↑<span>Jump</span></button>
+        </div>
+    </div>
+    <div class="runner-overlay" id="runner-overlay">
+        <p id="runner-message">Survive the semester.</p>
+        <button id="runner-start" type="button">Start · Space</button>
+    </div>
+</div>
+<form id="runner-save-score" class="runner-save-score" hidden>
+    <p>Save this run? Your name is optional; scores stay in this browser.</p>
+    <label for="runner-score-name">Name</label>
+    <input id="runner-score-name" type="text" maxlength="20" autocomplete="nickname" required>
+    <button id="runner-score-save" type="submit">Save score</button>
+    <button id="runner-score-skip" type="button">Skip</button>
+    <p id="runner-score-feedback" role="status"></p>
+</form>
+<div class="runner-actions">
+    <p id="runner-controls-hint">Hold Space / ↑ jump higher · Tap twice double jump · ↓ duck / fast fall · X chalk · Hold → speed up · P pause · M mute all · N next track · S skip</p>
+
+</div>
+<details class="runner-training">
+    <summary>Boss training · choose your challenge</summary>
+    <p>Start directly in an arena with five hearts. Practice rounds end after the boss and do not save scores.</p>
+    <nav aria-label="Choose a boss to practice">
+        <a href="runner.html?boss=reviewer">Reviewer 2 <span>Move, jump and aim your chalk.</span></a>
+        <a href="runner.html?boss=blackboard">The Blackboard <span>Dodge graphs; hit the exposed eraser.</span></a>
+        <a href="runner.html?boss=printer">The Printer <span>Duck sheets; hit the feed, then jump.</span></a>
+        <a href="runner.html?boss=deadline">The Deadline <span>Jump the minute hand; duck the hour hand.</span></a>
+    </nav>
+    <a href="runner.html">Back to a full semester run →</a>
+</details>
+<details id="runner-lookbook" class="runner-training runner-lookbook" open>
+    <summary>Appearance preview · jump to any semester</summary>
+    <p>Preview your academic career without playing. This does not change your run.</p>
+    <div class="runner-look-controls">
+        <label for="runner-look-semester">Semester</label>
+        <input id="runner-look-semester" type="range" min="1" max="81" value="1">
+        <input id="runner-look-number" type="number" min="1" max="999" value="1" aria-label="Preview semester number">
+        <label for="runner-look-pose">Pose</label>
+        <select id="runner-look-pose"><option value="stand">Standing</option><option value="run">Running</option><option value="sprint">Sprinting</option><option value="duck">Ducking</option></select>
+        <button id="runner-look-animate" type="button" aria-pressed="true">Pause preview</button>
+    </div>
+    <p id="runner-look-caption" role="status"></p>
+    <canvas id="runner-look-canvas" width="960" height="360" aria-label="Enlarged cosmetic character preview with academic career stages"></canvas>
+</details>
+<div class="runner-music">
+    <button id="runner-mute" type="button" aria-pressed="false">Mute · M</button>
+    <button id="runner-sound" type="button" aria-pressed="true">Sound: on</button>
+    <button id="runner-music" type="button" aria-pressed="true">Music: on</button>
+    <button id="runner-next-track" type="button" disabled>Next · N</button>
+    <label for="runner-track" class="runner-sr">Music track</label>
+    <select id="runner-track"><option value="games/math-run/music/liszt-liebestraum-no-3.mid">Liszt · Liebestraum No. 3</option><option value="games/math-run/music/mozart-rondo-alla-turca.mid">Mozart · Rondo alla Turca</option><option value="games/math-run/music/bach-prelude-c-major.mid">Bach · Prelude in C major</option><option value="games/math-run/music/bach-italian-concerto-1.mid">Bach · Italian Concerto I</option><option value="games/math-run/music/bach-italian-concerto-2.mid">Bach · Italian Concerto II — Andante</option><option value="games/math-run/music/bach-wtc1-prelude-2.mid">Bach · WTC I · Prelude 2 in C minor, BWV 847</option><option value="games/math-run/music/bach-wtc1-prelude-3.mid">Bach · WTC I · Prelude 3 in C-sharp major, BWV 848</option><option value="games/math-run/music/bach-wtc2-prelude-1.mid">Bach · WTC II · Prelude 1 in C major, BWV 870</option><option value="games/math-run/music/bach-wtc2-prelude-2.mid">Bach · WTC II · Prelude 2 in C minor, BWV 871</option><option value="games/math-run/music/beethoven-pathetique-3.mid">Beethoven · Pathétique III · Rondo — Allegro</option></select>
+</div>
+<details class="runner-leaderboard">
+    <summary>Local leaderboard</summary>
+    <ol id="runner-score-list"></ol>
+    <p id="runner-score-list-message"></p>
+</details>
+<details class="runner-help">
+    <summary>How to play</summary>
+    <p>Testing shortcut: Press S to skip. It jumps to the next semester phase, or starts the boss if its deadline comes first. During a boss fight it skips to the next semester. It also works while paused.</p>
+    <p>Start with one life. Collect pixel hearts to restore one life, up to five. Getting hit costs one heart and grants 1.5 seconds of protection, shown by blinking. Your remaining lives carry into boss fights. Game over happens only when no hearts remain.</p>
+    <p>Additional MIDI editions from the <a href="https://www.mutopiaproject.org/">Mutopia Project</a>, all Public Domain and unchanged: Bach BWV 847 and 848, typeset by Davide Castellone; BWV 870, Urs Metzger; BWV 871, Jesse Mehrbach; Beethoven’s Pathétique III, Chris Sawer. Full source links are in <a href="games/math-run/music/README.md">MIDI credits</a>.</p>
+    <p>Italian Concerto MIDI edition: Boris Dušek and Jay Anderson, <a href="https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1826">Mutopia Project</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>. MIDI files are unchanged.</p>
+    <p>Music starts with the game. Press M to mute or unmute all music and sound effects. Each new run starts with a random classical piece from the MIDI collection. Press N or Next to skip a classical track. The ten-track playlist includes Liszt, Mozart, Bach’s C-major Prelude and Italian Concerto I–II, four more preludes from The Well-Tempered Clavier I–II, and the final Rondo from Beethoven’s Pathétique. Boss battles have their own theme. Pausing or ending the game stops playback.</p>
+    <p>Hold jump for a high arc; release for a short hop. Press again for a double jump. Down ducks or speeds up your fall. Throw at your current height: duck for low targets, jump for high ones.</p>
+    <p>Each successful throw increases your combo multiplier without a cap: a hit at ×3 earns 15 points, at ×10 it earns 50. A completely missed volley resets the combo; one hit is enough to save a triple volley. Every 10 successful throws in a row unlocks a giant Hagoromo chalk for your next throw: it explodes, clears nearby obstacles and enemy shots, and deals three boss damage. Each volley counts once, even with multiple hits. The reward costs no normal chalk. Close dodges earn 10 points and restore one chalk if there is room.</p>
+    <p>Collect a safe ground token for 10 points, or double-jump for the upper heart or power-up and fast-fall past the trailing obstacle. Both rewards stay visible until collected or scrolled off screen. After your first boss victory, occasional expert upper routes add a longer ceiling sequence and grant 50 extra points with the upper heart or power-up. The lower route still offers a safe 10 points. Reward encounters keep a reachable double-jump window even at late-semester speeds. The upper reward arrives slightly earlier, so a well-timed jump and fast fall can collect both. Outlined power-ups give unlimited chalk (∞, 10s), triple throws (3, 10s), invincibility (shield, 6s), homing chalk (H, 10s), Espresso jump (coffee cup, 10s, adds a third jump with steam pixels), or another student assistant (figure icon, five lives without a time limit). Effects combine.</p>
+    <p>Occasional falling book stacks, archive boxes, exam piles and small blackboards mark their landing spot before dropping onto the floor. Jump over the landed obstacle or duck and throw chalk to clear it; ducking alone cannot protect you. Later combinations mix these drops with ducking obstacles. Short sequences combine ducking and jumping. Proof tiles need two chalk hits; Reviewer Reports need three, shown by the bars above them. Shield, assistants and Hagoromo still clear them in one encounter. The first boss approach builds from 180 pixels per second, with a sharp acceleration in the final 15 seconds toward 460 pixels per second, shorter recovery gaps and more varied duck/jump combinations. Hold the Right arrow during running for 1.6× game speed; release it to return to normal speed. In boss arenas the arrow still moves you right. Every boss victory permanently raises the starting and peak speeds and shortens recovery gaps further, with diminishing increases that keep the peak below 560 pixels per second. Each new approach builds from this higher starting pace. Announced semester modifiers rotate between balanced encounters, meteor showers, longer formulas and extra professor visits. Cosmetic career stages unlock in semesters 1, 3, 6, 10 and 16: Student, Doctoral student, Postdoc, Professor and Emeritus. Clothing, hair, accessories and walking cadence evolve. Normal running keeps only the mathematical background figures; each boss arena has its own subtle backdrop: reviewer reports, a graph grid, printer sheets or a clock face. The beard keeps growing every two semesters, trails backward while sprinting and swings forward when you release boost. Later it gains braids and chalk dust; from semester 25, an enormous walking beard leaves spectacles and shoes peeking out. Boss mementos include reviewer glasses, a blackboard eraser and a tiny clock. Reduced-motion mode stops decorative flutter. These changes are entirely cosmetic: movement, collision boxes and difficulty are unchanged. After the first victory, four-part zigzags and low-ceiling combinations unlock; after the second, five-part jump/duck gauntlets join the rotation. Watch the obstacle heights and land between jumps. The stress phase lasts 20 seconds in the first semester, then five seconds longer per boss victory, up to 45 seconds. During this phase, your student sweats and runs more frantically, and the music accelerates by up to 35%. Short announced waves alternate with extra recovery pauses. A single Pressure rising bar displays the remaining seconds and turns red for the final three seconds. Ticking continues until the boss actually enters; while remaining obstacles clear, the indicator reads Boss incoming. Close dodges trigger a heartbeat and a brief border pulse. Reduced-motion mode omits the pulse. Each boss entrance starts with a brief silence before its theme begins. Prime-number asteroids begin 20 seconds before the first boss and five seconds earlier after each victory, up to a 50-second window. These are consecutive, increasing primes generated with exact BigInt arithmetic in bounded work slices, rather than a repeating list. Later semesters bring double and triple showers with different flight angles. These prime-number asteroids (2, 3, 5, 7, 11, …), announced two seconds beforehand. Watch the landing marker: the fiery rocks fly on a shallow diagonal from the upper right with an animated streaming tail, strike the ground with dust, and block your path. Time a jump over the debris or duck and destroy it with chalk after impact. Ducking alone is unsafe. Asteroids replace ground obstacles within the existing patterns so the surrounding duck/jump route stays possible. The final 20 seconds before each boss build extra pressure: more sequences, shorter recovery gaps in the final 10 seconds, and two-hit sequence endings. The combined Pressure rising bar is the only boss-approach indicator; the world gradually turns red throughout the stress phase and resets after the boss. Exam season brings denser duck/jump sequences; Deadline night brings fast email bursts followed by recovery gaps.</p>
+    <p>Watch the right edge for flying obstacles. A professor periodically throws integral volleys, while a smaller printer fires paper avalanches. Later semesters mix short and long integrals and add announced paper-jam follow-up sheets. Their attacks alternate between heights: jump low projectiles and duck under middle ones, or clear them with chalk. The long flying formula states ε–δ continuity of f:D⊆ℝ→ℝ at a∈D; stay below it until the full string passes. Small clocks travel up and down between head height and the floor: duck when they pass high, jump when they pass low, or hit them with chalk. Hit a student to answer their question. Worksheets fold into harmless paper planes. Each semester phase brings new patterns; Office hours and Inbox overflow are announced in advance.</p>
+    <p>From the second cycle through the bosses, each boss announces a delayed follow-up attack: extra reviewer fire, a second graph, more printer sheets or an extra clock projectile. Every 60 seconds of running, a boss arena starts. Reviewer 2, The Blackboard, The Printer, and The Deadline appear in order. Scrolling stops. Use Left/Right to move, Space to jump, Down to duck or fast fall, and X to throw. Face the boss with Left/Right and jump to align your chalk with its height. Reviewer 2 changes position and then holds still briefly: use those openings while dodging its attacks. Only the Homing chalk power-up steers toward targets. Student assistants stay until their five lives run out, including in arenas where they intercept hostile shots. On touchscreens the translucent controls sit inside the game, along the bottom edge: Duck and the boss direction buttons on the left, Jump and Chalk on the right. They stay hidden on devices without touch input. Hold Chalk for repeated throws; hold Jump for height, or tap twice for a double jump. Reviewer 2 takes six hits. The Blackboard shifts up and down while drawing and takes eight hits: dodge its bouncing parabola and sine wave, then jump and hit the exposed eraser after it finishes drawing. The board itself blocks chalk, including Homing chalk. Hagoromo deals three damage only while the eraser is exposed. The Printer also takes eight hits: duck under incoming sheets, throw into its golden open feed, then jump over the paper-jam wave. Hitting the feed triggers the wave after a short warning. The Deadline takes ten face hits: jump over the low minute hand and duck under the higher hour hand. Hitting its face slows the clock and its flying hands briefly; the last three HP trigger a faster final countdown. Winning earns 100 extra points. Chalk recharges every second in the arena. Rare power-ups appear high above the floor: reach them with a double jump before their 6.5-second timer expires. The run resumes only after victory; the next boss arrives after another 60 seconds of running.</p>
+</details>
+<p id="runner-status" class="runner-sr" role="status" aria-live="polite" aria-atomic="true"></p>
+<noscript>Please enable JavaScript to play.</noscript>
