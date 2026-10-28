@@ -53,7 +53,7 @@ lang: en
     </nav>
     <a href="runner.html">Back to a full semester run →</a>
 </details>
-<details id="runner-lookbook" class="runner-training runner-lookbook" open>
+<details id="runner-lookbook" class="runner-training runner-lookbook">
     <summary>Appearance preview · jump to any semester</summary>
     <p>Preview your academic career without playing. This does not change your run.</p>
     <div class="runner-look-controls">
