@@ -5,11 +5,6 @@ lang: en
 
 <div class="runner-toolbar">
     <div class="runner-scores"><span>Lives <strong id="runner-lives" aria-label="1 of 5 lives">♥♡♡♡♡</strong></span><span>Score <strong id="runner-score">0</strong></span><span>Best <strong id="runner-best">0</strong></span><span>Combo <strong id="runner-combo">×1</strong></span><span id="runner-career">Semester 1 · Student</span><span id="runner-phase">Lecture week</span><span>Chalk <strong id="runner-chalk-count">3</strong><span id="runner-chalk-capacity">/3</span></span></div>
-    <button id="runner-pause" type="button" disabled>Pause</button>
-</div>
-<div class="runner-messages">
-    <p id="runner-event" class="runner-event" hidden></p>
-    <p id="runner-effects" class="runner-effects" hidden></p>
 </div>
 <div class="runner-stage">
     <canvas id="runner-canvas" width="960" height="320" tabindex="0" aria-label="Math Run. Jump over low obstacles, duck under middle obstacles, and stay low when high obstacles pass. Hold Space or Up to jump higher; release for a short hop. Press again to double jump. Down to duck or fast fall. X to throw chalk at your current height. Three pieces; one recharges every four seconds. P to pause. M to mute or unmute all game audio. Boss arena: Left/Right moves, Space jumps, X throws. Throws follow your facing direction; jump to aim at boss height.">A pixel runner game. Please use a browser that supports canvas.</canvas>
@@ -27,6 +22,13 @@ lang: en
         <p id="runner-message">Survive the semester.</p>
         <button id="runner-start" type="button">Start · Space</button>
     </div>
+</div>
+<div class="runner-statusbar">
+    <div class="runner-messages">
+        <p id="runner-event" class="runner-event">Ready · Space to start</p>
+        <p id="runner-effects" class="runner-effects" hidden></p>
+    </div>
+    <button id="runner-pause" type="button" disabled>Pause</button>
 </div>
 <form id="runner-save-score" class="runner-save-score" hidden>
     <p>Save this run? Your name is optional; scores stay in this browser.</p>

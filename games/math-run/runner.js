@@ -568,7 +568,7 @@
     function updateHud() {
         const career = RunnerCosmetics.profileAt(state.bossWins);
         careerDisplay.textContent = `Semester ${career.semester} · ${career.title}`;
-        careerDisplay.title = 'Cosmetic career progression';
+        careerDisplay.title = careerDisplay.textContent;
         livesDisplay.textContent = '♥'.repeat(state.lives) + '♡'.repeat(state.maxLives - state.lives);
         livesDisplay.setAttribute('aria-label', `${state.lives} of ${state.maxLives} lives`);
         score.textContent = String(state.score);
@@ -579,9 +579,11 @@
         const effects = active.map(type => type.kind === 'assistant' ? `Student assistants ×${state.assistants.length} · ${state.assistants.reduce((sum, helper) => sum + helper.hits, 0)} lives` : `${type.label} ${Math.ceil(state.powerups[type.kind])}s`);
         if (state.hagoromo) effects.push(`Hagoromo ×${state.hagoromo} ready — next throw`);
         effectsDisplay.textContent = effects.join(' · ');
+        effectsDisplay.title = effectsDisplay.textContent;
         effectsDisplay.hidden = effects.length === 0;
         comboDisplay.textContent = `×${state.multiplier}${state.streak ? ` · ${state.streak} hits` : ''}`;
         phaseDisplay.textContent = bossTest ? 'Boss training · no highscore' : `${MathRunner.phases[state.phase].label}${state.bossWins ? ' · ' + MathRunner.semesterAt(state.bossWins) : ''}`;
+        phaseDisplay.title = phaseDisplay.textContent;
         const intro = Boolean(state.bossIntro);
         if (intro !== previousIntro) { clearInputs(); previousIntro = intro; setControls(mode === 'running' && !intro); }
         const arena = Boolean(state.boss);
@@ -612,10 +614,10 @@
             : state.boss.type === 'deadline' ? `${bossName} · ${state.boss.hp}/10 · ${state.boss.slow > 0 ? 'Clock slowed!' : state.boss.hp <= 3 ? 'Final countdown!' : 'Watch the hands'}`
             : `${bossName} · ${state.boss.hp}/6 comments left · Jump to aim`
             : bossWarning ? 'Boss arena incoming — the run will stop!'
-            : state.bossPressure ? `${state.bossPressure === 2 ? 'Final push' : 'Pressure rising'} · boss in ${Math.max(0, Math.ceil(state.nextBossAt - state.runTime))}s`
             : state.event ? `${state.event.label}${state.event.warning ? ' incoming…' : ` · ${Math.ceil(state.event.remaining)}s`}` : '';
-        eventDisplay.textContent = scene;
-        eventDisplay.hidden = !scene;
+        eventDisplay.textContent = scene || (mode === 'ready' ? 'Ready · Space to start' : mode === 'paused' ? 'Paused' : mode === 'over' ? 'Run finished' : 'Running');
+        eventDisplay.title = eventDisplay.textContent;
+        eventDisplay.hidden = false;
         const sceneKey = `${state.phase}:${state.bossIntro ? 'boss-intro' : state.boss ? 'boss' : bossWarning ? 'boss-warning' : state.bossPressure ? 'pressure-'+state.bossPressure : state.event ? state.event.kind + state.event.warning : ''}`;
         if (sceneKey !== announcedScene) {
             announcedScene = sceneKey;

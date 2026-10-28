@@ -6,13 +6,13 @@
     <title>Math Run</title>
     <script src="theme.js?v=c177175cfa91"></script>
     <link rel="stylesheet" href="style.css?v=b06b61e025ef">
-<link rel="stylesheet" href="games/math-run/runner.css?v=b3255440c34b">
+<link rel="stylesheet" href="games/math-run/runner.css?v=d988072d1402">
 <script defer src="games/math-run/runner-engine.js?v=8c9bebfa058d"></script>
 <script defer src="games/math-run/runner-music.js?v=e08f01accb9a"></script>
 <script defer src="games/math-run/runner-sound.js?v=902e324bb90f"></script>
 <script defer src="games/math-run/runner-scores.js?v=0b436af2ad76"></script>
 <script defer src="games/math-run/runner-cosmetics.js?v=d4d866ce69b1"></script>
-<script defer src="games/math-run/runner.js?v=349f3af78553"></script>
+<script defer src="games/math-run/runner.js?v=3c792522ccb8"></script>
 <script defer src="games/math-run/runner-lookbook.js?v=83c9e6291ceb"></script>
 </head>
 <body class="page-runner">
@@ -38,11 +38,6 @@
     <main id="content" class="content-grid">
 <div class="runner-toolbar">
     <div class="runner-scores"><span>Lives <strong id="runner-lives" aria-label="1 of 5 lives">♥♡♡♡♡</strong></span><span>Score <strong id="runner-score">0</strong></span><span>Best <strong id="runner-best">0</strong></span><span>Combo <strong id="runner-combo">×1</strong></span><span id="runner-career">Semester 1 · Student</span><span id="runner-phase">Lecture week</span><span>Chalk <strong id="runner-chalk-count">3</strong><span id="runner-chalk-capacity">/3</span></span></div>
-    <button id="runner-pause" type="button" disabled>Pause</button>
-</div>
-<div class="runner-messages">
-    <p id="runner-event" class="runner-event" hidden></p>
-    <p id="runner-effects" class="runner-effects" hidden></p>
 </div>
 <div class="runner-stage">
     <canvas id="runner-canvas" width="960" height="320" tabindex="0" aria-label="Math Run. Jump over low obstacles, duck under middle obstacles, and stay low when high obstacles pass. Hold Space or Up to jump higher; release for a short hop. Press again to double jump. Down to duck or fast fall. X to throw chalk at your current height. Three pieces; one recharges every four seconds. P to pause. M to mute or unmute all game audio. Boss arena: Left/Right moves, Space jumps, X throws. Throws follow your facing direction; jump to aim at boss height.">A pixel runner game. Please use a browser that supports canvas.</canvas>
@@ -60,6 +55,13 @@
         <p id="runner-message">Survive the semester.</p>
         <button id="runner-start" type="button">Start · Space</button>
     </div>
+</div>
+<div class="runner-statusbar">
+    <div class="runner-messages">
+        <p id="runner-event" class="runner-event">Ready · Space to start</p>
+        <p id="runner-effects" class="runner-effects" hidden></p>
+    </div>
+    <button id="runner-pause" type="button" disabled>Pause</button>
 </div>
 <form id="runner-save-score" class="runner-save-score" hidden>
     <p>Save this run? Your name is optional; scores stay in this browser.</p>

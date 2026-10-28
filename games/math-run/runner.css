@@ -1,9 +1,9 @@
 .page-runner .hero { grid-template-columns: 1fr; padding-bottom: 28px; }
 .page-runner #content { display: block; }
 .runner-toolbar, .runner-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.runner-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; margin-bottom: 12px; }
-.runner-scores { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 3.2em; gap: 4px 12px; font-size: 14px; color: var(--muted); line-height: 1.5; }
-.runner-scores > span { min-width: 0; overflow: auto; }
+.runner-toolbar { display: block; margin-bottom: 8px; }
+.runner-scores { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: 1.5em; gap: 4px 12px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.runner-scores > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .runner-scores strong { color: var(--ink); font-variant-numeric: tabular-nums; }
 .page-runner main button { padding: 9px 18px; border: 1px solid var(--line); background: var(--background); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; border-radius: 0; }
 .page-runner main button:disabled { opacity: .45; cursor: default; }
@@ -14,25 +14,34 @@
 .runner-overlay p { margin: 0; font-size: clamp(16px, 3vw, 24px); }
 .runner-overlay #runner-start { background: #c9e59b; color: #172431; border-color: #c9e59b; font-family: inherit; }
 .runner-actions { margin-top: 16px; }
-.runner-actions p { margin: 0; font-size: 13px; color: var(--muted); }
+.runner-actions p { flex: 1 1 220px; margin: 0; font-size: 13px; color: var(--muted); }
 .runner-touch { display: flex; gap: 10px; }
 .runner-hint { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .runner-touch button { touch-action: none; user-select: none; -webkit-user-select: none; min-height: 48px; }
 .runner-touch button:active { background: var(--panel); }
 .runner-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-.runner-messages { display: grid; grid-template-rows: 24px 42px; gap: 6px; margin-bottom: 12px; }
-.runner-effects { margin: 0; min-width: 0; overflow: auto; font: 13px/1.5 Consolas, monospace; color: var(--blue); }
-.runner-effects[hidden], .runner-event[hidden] { display: block; visibility: hidden; }
-
-.runner-event { margin: 0; min-width: 0; overflow: auto; font: 14px/1.5 Consolas, monospace; color: var(--ink); padding-left: 10px; border-left: 3px solid var(--blue); }
+/* A fixed-height status strip below the canvas keeps the play area unobstructed. */
+.runner-statusbar {
+    box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) 80px;
+    align-items: center; gap: 10px; height: 58px; padding: 6px 8px;
+    border: 1px solid var(--line); border-top: 0; background: var(--background);
+}
+.runner-messages { display: grid; grid-template-rows: 20px 18px; gap: 2px; min-width: 0; }
+.runner-event, .runner-effects {
+    margin: 0; min-width: 0; overflow-x: auto; overflow-y: hidden; white-space: nowrap;
+    scrollbar-width: none; touch-action: pan-x; font: 12px/18px Consolas, monospace;
+}
+.runner-event { grid-row: 1; color: var(--ink); }
+.runner-effects { grid-row: 2; color: var(--muted); }
+.runner-effects[hidden] { display: block; visibility: hidden; }
+.runner-event::-webkit-scrollbar, .runner-effects::-webkit-scrollbar { display: none; }
+.page-runner #runner-pause { box-sizing: border-box; width: 80px; height: 38px; padding: 4px 6px; font-size: 12px; }
 @media (max-width: 760px) {
     .runner-scores { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .runner-messages { grid-template-rows: 44px 64px; }
 }
 @media (max-width: 480px) {
     .runner-scores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .runner-messages { grid-template-rows: 44px 84px; }
 }
 
 .runner-help { margin-top: 14px; font-size: 13px; color: var(--muted); max-width: 80ch; }
